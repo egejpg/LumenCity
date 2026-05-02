@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// API route'larında kullanılır — RLS bypass eder, service role ile çalışır
 export function createServerSupabaseClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,7 +9,6 @@ export function createServerSupabaseClient() {
   );
 }
 
-// Server Component / Server Action'larda kullanılır — kullanıcının oturumunu okur
 export async function createSessionSupabaseClient() {
   const cookieStore = await cookies();
   return createServerClient(

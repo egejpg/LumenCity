@@ -2,7 +2,7 @@
 
 import { MapContainer, TileLayer, useMap, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import L from "leaflet";
 import { useReports } from "@/hooks/useReports";
 import { useAnomalies } from "@/hooks/useAnomalies";
@@ -12,8 +12,8 @@ import HeatmapLayer from "./HeatmapLayer";
 import type { LayerConfig, Zone } from "@/types";
 
 // Moda Mahallesi merkezi
-const PILOT_CENTER: [number, number] = [40.9833, 29.0333];
-const PILOT_ZOOM = 15;
+const PILOT_CENTER: [number, number] = [41.015, 29.0];
+const PILOT_ZOOM = 11;
 
 interface CityMapProps {
   mode: "citizen" | "admin";
@@ -87,14 +87,18 @@ export default function CityMap({
   const { reports } = useReports();
   const { anomalies } = useAnomalies();
 
-  const showHeatmap = mode === "admin" ? (layers?.heatmap ?? true) : false;
-  const showReports = layers?.reports ?? true;
-  const showAnomalies = mode === "admin" ? (layers?.anomalies ?? true) : false;
+  const showHeatmap    = mode === "admin" ? (layers?.heatmap    ?? true)  : false;
+  const showReports    = layers?.reports   ?? true;
+  const showAnomalies  = mode === "admin" ? (layers?.anomalies  ?? true)  : false;
+  const showSatellite  = mode === "admin" ? (layers?.satellite  ?? false) : false;
 
   return (
     <MapContainer
       center={PILOT_CENTER}
       zoom={PILOT_ZOOM}
+      minZoom={6}
+      maxBounds={[[33, 22], [45, 50]]}
+      maxBoundsViscosity={1.0}
       className="w-full h-full z-0"
       style={{ background: "#1a1a2e" }}
     >
@@ -103,6 +107,16 @@ export default function CityMap({
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://carto.com/">CARTO</a>'
       />
+
+      {showSatellite && (
+        <TileLayer
+          url="https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_DayNightBand_ENCC/default/2023-01-01/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg"
+          attribution='&copy; <a href="https://earthdata.nasa.gov">NASA GIBS</a>'
+          opacity={0.75}
+          maxNativeZoom={8}
+          maxZoom={18}
+        />
+      )}
 
       {showHeatmap && <HeatmapLayer />}
 

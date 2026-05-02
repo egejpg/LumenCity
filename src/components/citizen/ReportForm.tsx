@@ -1,14 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRole } from "@/hooks/useRole";
-import CameraCapture from "./CameraCapture";
-import StarrySky from "./StarrySky";
 import { createClientSupabaseClient } from "@/lib/supabase/client";
 import type { ReportCategory } from "@/types";
 
+let faceApiLoaded = false;
+
+async function detectFaces(imageElement: HTMLImageElement): Promise<number> {
+  const mod = await import("face-api.js");
+  // CJS bundle'da her şey .default içinde, ESM'de namespace'de olur
+  const faceapi = (mod as any).default?.nets ? (mod as any).default : mod;
+  if (!faceApiLoaded) {
+    await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
+    faceApiLoaded = true;
+  }
+  const detections = await faceapi.detectAllFaces(
+    imageElement,
+    new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.3 })
+  );
+  return detections.length;
+}
+
 const CATEGORIES: { key: ReportCategory; label: string; icon: string }[] = [
-  { key: "diger", label: "Diğer", icon: "❓" },
+  { key: "sokak_lambasi",  label: "Sokak Lambası Arızası",   icon: "🔦" },
+  { key: "bos_ofis_isigi", label: "Gereksiz Işık Kullanımı", icon: "💡" },
+  { key: "reklam_panosu", label: "Reklam Panosu Şikayeti",  icon: "📋" },
+  { key: "otopark",        label: "Otopark Aydınlatması",    icon: "🅿️" },
+  { key: "diger",          label: "Diğer",                   icon: "📌" },
 ];
 
 interface ReportFormProps {
@@ -18,24 +37,20 @@ interface ReportFormProps {
   lng: number;
 }
 
-type Step = "capture" | "ai-loading" | "preview" | "uploading" | "done" | "error";
+type Step = "form" | "uploading" | "done" | "error";
 
 export default function ReportForm({ onClose, onSuccess, lat, lng }: ReportFormProps) {
   const { role } = useRole();
-  
-  // Role kontrolü - Sadece citizen yapabilir
+
   if (role !== "citizen") {
     return (
       <div className="absolute inset-0 z-20 bg-black/75 flex items-center justify-center backdrop-blur-sm">
         <div className="bg-gray-950 border border-gray-800 rounded-3xl p-8 max-w-sm text-center shadow-2xl">
-          <p className="text-gray-400 text-lg mb-4">⛔ Yetkiniz Yok</p>
+          <p className="text-gray-400 text-lg mb-4">⛔ Yetki Yetersiz</p>
           <p className="text-gray-500 text-sm mb-6">
-            Bu işlemi yapmak için vatandaş rolüne geçmeniz gerekmektedir.
+            Bildirim yapabilmek için vatandaş rolüne geçmeniz gerekmektedir.
           </p>
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition"
-          >
+          <button onClick={onClose} className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition">
             Kapat
           </button>
         </div>
@@ -43,60 +58,61 @@ export default function ReportForm({ onClose, onSuccess, lat, lng }: ReportFormP
     );
   }
 
-  const [step, setStep] = useState<Step>("capture");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState("");
-  
-  // Yıldız özelliği state'leri
-  const [starData, setStarData] = useState<{
-    visibleStars: { name: string; description: string }[];
-    skyBox: { ymin: number; xmin: number; ymax: number; xmax: number } | null;
-  } | null>(null);
-  const [starLoading, setStarLoading] = useState(false);
-  const [showCanvas, setShowCanvas] = useState(false);
+  const [step, setStep]               = useState<Step>("form");
+  const [imageFile, setImageFile]     = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl]   = useState<string | null>(null);
+  const [category, setCategory]       = useState<ReportCategory | null>(null);
+  const [note, setNote]               = useState("");
+  const [errorMsg, setErrorMsg]       = useState("");
+  const [faceError, setFaceError]     = useState("");
+  const [faceChecking, setFaceChecking] = useState(false);
+  const fileInputRef                  = useRef<HTMLInputElement>(null);
 
-  // Fotoğraf seçildi → preview adımına geç, yıldızları otomatik hesapla
-  function handleCapture(file: File) {
-    setImageFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    setStep("preview");
-    setStarData(null);
-    setShowCanvas(false);
-    
-    // Otomatik yıldız hesaplama
-    if (lat && lng) {
-      setStarLoading(true);
-      const formData = new FormData();
-      formData.append("image", file);
-      formData.append("lat", lat.toString());
-      formData.append("lng", lng.toString());
-      formData.append("time", new Date().toISOString());
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-      fetch("/api/ai/stars", { 
-        method: "POST", 
-        body: formData,
-        headers: {
-          "x-user-role": role
-        }
-      })
-        .then((res) => res.json())
-        .then((data) => setStarData(data))
-        .catch(() => console.error("Yıldızlar hesaplanamadı"))
-        .finally(() => setStarLoading(false));
+    const objectUrl = URL.createObjectURL(file);
+    setFaceError("");
+    setFaceChecking(true);
+    setPreviewUrl(objectUrl);
+
+    try {
+      const img = new Image();
+      img.src = objectUrl;
+      await new Promise((res) => { img.onload = res; });
+      const count = await detectFaces(img);
+      if (count > 0) {
+        setFaceError("Fotoğrafta kişi tespit edildi. Lütfen kişi içermeyen bir fotoğraf yükleyiniz.");
+        setPreviewUrl(null);
+        setImageFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+      setImageFile(file);
+    } catch (err) {
+      console.error("[FaceDetect] Hata:", err);
+      setFaceError("Fotoğraf kontrol edilemedi. Lütfen tekrar deneyin.");
+      setPreviewUrl(null);
+      setImageFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } finally {
+      setFaceChecking(false);
     }
   }
 
+  function removePhoto() {
+    setImageFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
 
-
-  // Formu gönder: Storage'a yükle → reports API'sine POST
   async function handleSubmit() {
-    if (!starData) return;
+    if (!category) return;
     setStep("uploading");
 
     let image_url: string | null = null;
 
-    // Storage upload
     if (imageFile) {
       try {
         const supabase = createClientSupabaseClient();
@@ -106,193 +122,229 @@ export default function ReportForm({ onClose, onSuccess, lat, lng }: ReportFormP
           .from("reports")
           .upload(filename, imageFile, { contentType: imageFile.type, upsert: false });
         if (!uploadError && uploadData) {
-          const { data: urlData } = supabase.storage
-            .from("reports")
-            .getPublicUrl(uploadData.path);
+          const { data: urlData } = supabase.storage.from("reports").getPublicUrl(uploadData.path);
           image_url = urlData.publicUrl;
         }
-      } catch {
-        // Upload başarısız → base64'e çevirip devam et (mock data için)
-      }
-      
-      // Eğer Supabase'e yüklenemediyse ve bir image_url yoksa, dosyayı base64 string'ine çevirelim
+      } catch { /* Supabase yoksa base64 */ }
+
       if (!image_url) {
-        const base64 = await new Promise<string>((resolve) => {
+        image_url = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result as string);
           reader.readAsDataURL(imageFile);
         });
-        image_url = base64;
       }
     }
 
     try {
       const res = await fetch("/api/reports", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-user-role": role
-        },
-        body: JSON.stringify({ 
-          lat, 
-          lng, 
-          category: "diger", 
-          description: "Gökyüzü Analizi", 
+        headers: { "Content-Type": "application/json", "x-user-role": role },
+        body: JSON.stringify({
+          lat,
+          lng,
+          category,
+          description: note.trim() || CATEGORIES.find(c => c.key === category)!.label,
           image_url,
-          star_data: starData
         }),
       });
-      if (!res.ok) throw new Error("Sunucu hatası");
+      if (!res.ok) throw new Error();
       setStep("done");
       onSuccess?.();
     } catch {
-      setErrorMsg("Bildirim gönderilemedi. Tekrar dene.");
+      setErrorMsg("Bildirim gönderilemedi. Lütfen tekrar deneyiniz.");
       setStep("error");
     }
   }
+
+  const canSubmit = !!category;
 
   return (
     <div className="absolute inset-0 z-20 bg-black/75 flex items-end justify-center backdrop-blur-sm">
       <div
         className="bg-gray-950 border border-gray-800 rounded-t-3xl w-full max-w-lg shadow-2xl"
-        style={{ maxHeight: "90dvh", overflowY: "auto" }}
+        style={{ maxHeight: "92dvh", overflowY: "auto" }}
       >
-        {/* Header */}
-        <div className="flex justify-between items-center px-6 pt-6 pb-4 border-b border-gray-800">
+        {/* Başlık */}
+        <div className="flex justify-between items-start px-6 pt-6 pb-4 border-b border-gray-800">
           <div>
-            <h2 className="text-indigo-400 font-bold text-xl leading-tight flex items-center gap-2">
-              <span>🔭</span> Yıldız Haritası
-            </h2>
-            <p className="text-gray-500 text-xs mt-0.5">
-              📍 {lat.toFixed(4)}, {lng.toFixed(4)}
-            </p>
+            <p className="text-gray-500 text-[11px] uppercase tracking-widest mb-1">Işık Kirliliği Bildirimi</p>
+            <h2 className="text-white font-bold text-xl leading-tight">Şikayet &amp; Bildirim Formu</h2>
+            <p className="text-gray-600 text-xs mt-1">📍 {lat.toFixed(5)}, {lng.toFixed(5)}</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition active:scale-95"
+            className="mt-1 w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition active:scale-95"
           >
             ✕
           </button>
         </div>
 
-        <div className="px-6 pb-8 pt-4">
-          {/* ADIM 1: Fotoğraf çek */}
-          {step === "capture" && <CameraCapture onCapture={handleCapture} />}
+        {step === "form" && (
+          <div className="px-6 pb-8 pt-5 space-y-6">
 
-          {/* ADIM 2: Preview + AI + Chip override + Textarea */}
-          {step === "preview" && (
-            <div className="space-y-4">
-              {/* Fotoğraf preview veya Yıldızlı Gökyüzü */}
-              {previewUrl && (
-                <div className="relative">
-                  {showCanvas && starData ? (
-                    <StarrySky 
-                      imageUrl={previewUrl} 
-                      skyBox={starData.skyBox} 
-                      visibleStars={starData.visibleStars} 
-                    />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={previewUrl}
-                      alt="Bildirim görseli"
-                      className="w-full h-44 object-cover rounded-2xl border border-gray-800"
-                    />
-                  )}
+            {/* Fotoğraf */}
+            <div>
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3">
+                Fotoğraf <span className="text-gray-600 normal-case tracking-normal font-normal">(isteğe bağlı)</span>
+              </p>
+
+              {faceChecking ? (
+                <div className="w-full h-36 rounded-2xl border border-gray-800 bg-gray-900/60 flex flex-col items-center justify-center gap-2">
+                  <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-gray-500 text-xs">Fotoğraf kontrol ediliyor...</span>
+                </div>
+              ) : !previewUrl ? (
+                <>
                   <button
-                    onClick={() => { setStep("capture"); setPreviewUrl(null); setStarData(null); setShowCanvas(false); }}
-                    className="absolute top-2 right-2 z-30 bg-black/60 text-white text-xs px-2 py-1 rounded-full hover:bg-black/80 transition"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full h-36 rounded-2xl border-2 border-dashed border-gray-700 hover:border-gray-500 flex flex-col items-center justify-center gap-2 text-gray-500 hover:text-gray-400 transition active:scale-[0.98]"
                   >
-                    Yeniden çek
+                    <span className="text-3xl">📷</span>
+                    <span className="text-sm">Fotoğraf Ekle</span>
+                    <span className="text-xs text-gray-600">Galeriden seç veya kamera aç</span>
+                  </button>
+                  {faceError && (
+                    <div className="mt-2 flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2.5">
+                      <span className="text-red-400 text-base leading-none mt-0.5">⚠️</span>
+                      <p className="text-red-400 text-xs leading-relaxed">{faceError}</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={previewUrl}
+                    alt="Yüklenen fotoğraf"
+                    className="w-full h-44 object-cover rounded-2xl border border-gray-800"
+                  />
+                  <button
+                    onClick={removePhoto}
+                    className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white text-xs px-2.5 py-1 rounded-full transition"
+                  >
+                    Kaldır
                   </button>
                 </div>
               )}
 
-              {/* Yıldız Listesi ve Canvas Göster Butonu */}
-              {starLoading && (
-                <div className="flex items-center gap-2 text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 rounded-lg px-3 py-2">
-                  <span className="inline-block w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                  <span>Astronomik veriler hesaplanıyor...</span>
-                </div>
-              )}
-
-              {starData && (
-                <div className="bg-gray-900/50 border border-indigo-500/20 rounded-xl p-3.5 mt-2">
-                  <h4 className="text-indigo-300 text-xs font-bold mb-2.5 flex items-center gap-1.5">
-                    <span>🔭</span> Şu An Tepedeki Yıldızlar
-                  </h4>
-                  <ul className="space-y-2.5 mb-3">
-                    {starData.visibleStars.map((star, i) => (
-                      <li key={i} className="flex gap-2.5 text-xs">
-                        <span className="text-indigo-400 mt-0.5 opacity-80">✦</span>
-                        <div>
-                          <strong className="text-gray-200 block mb-0.5">{star.name}</strong>
-                          <span className="text-gray-500 leading-relaxed">{star.description}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {!showCanvas && (
-                    <button
-                      onClick={() => setShowCanvas(true)}
-                      className="w-full py-2.5 rounded-xl border-2 border-indigo-500/30 text-indigo-400 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-indigo-500/10 transition active:scale-95"
-                    >
-                      ✨ Yıldızları Fotoğrafa Ekle (Işık Kirliliğini Kaldır)
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Gönder butonu - Sadece yıldızlar yüklendikten sonra çıksın */}
-              {starData && (
-                <button
-                  onClick={handleSubmit}
-                  className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition active:scale-95 shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 mt-4"
-                >
-                  📍 Haritaya Kaydet
-                </button>
-              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileChange}
+                className="hidden"
+              />
             </div>
-          )}
 
-          {/* ADIM 3: Upload + Gönderme */}
-          {step === "uploading" && (
-            <div className="text-center py-12 space-y-3">
-              <div className="w-12 h-12 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-gray-400 text-sm">Gönderiliyor...</p>
+            {/* Sorun türü */}
+            <div>
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3">
+                Sorun Türü <span className="text-red-500">*</span>
+              </p>
+              <div className="space-y-2">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.key}
+                    onClick={() => setCategory(cat.key)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition active:scale-[0.98] ${
+                      category === cat.key
+                        ? "bg-amber-500/15 border-amber-500/50 text-amber-300"
+                        : "bg-gray-900/60 border-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-300"
+                    }`}
+                  >
+                    <span className="text-lg">{cat.icon}</span>
+                    <span className="text-sm font-medium">{cat.label}</span>
+                    {category === cat.key && (
+                      <span className="ml-auto text-amber-400 text-xs">✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
 
-          {/* ADIM 4: Başarı */}
-          {step === "done" && (
-            <div className="text-center py-10 space-y-3">
-              <div className="text-5xl animate-bounce">✅</div>
-              <p className="text-white font-bold text-lg">Haritaya Eklendi!</p>
-              <p className="text-gray-400 text-sm">Gökyüzü keşfiniz başarıyla haritaya eklendi.</p>
+            {/* Not */}
+            <div>
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3">
+                Ek Açıklama <span className="text-gray-600 normal-case tracking-normal font-normal">(isteğe bağlı)</span>
+              </p>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Sorunu kısaca açıklayınız..."
+                rows={3}
+                maxLength={500}
+                className="w-full bg-gray-900 border border-gray-800 focus:border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-200 placeholder:text-gray-700 resize-none outline-none transition"
+              />
+              <p className="text-right text-gray-700 text-xs mt-1">{note.length}/500</p>
+            </div>
+
+            {/* Gönder */}
+            <button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className="w-full py-4 bg-amber-500 hover:bg-amber-400 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-black font-bold rounded-xl transition active:scale-95 text-sm tracking-wide"
+            >
+              Belediyeye Gönder
+            </button>
+
+            {!canSubmit && (
+              <p className="text-center text-gray-600 text-xs -mt-2">Devam etmek için sorun türü seçiniz</p>
+            )}
+          </div>
+        )}
+
+        {/* Gönderiliyor */}
+        {step === "uploading" && (
+          <div className="px-6 py-16 text-center space-y-4">
+            <div className="w-12 h-12 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-gray-400 text-sm">Bildiriminiz iletiliyor...</p>
+          </div>
+        )}
+
+        {/* Başarı */}
+        {step === "done" && (
+          <div className="px-6 py-14 text-center space-y-4">
+            <div className="w-16 h-16 bg-green-500/15 rounded-full flex items-center justify-center mx-auto">
+              <span className="text-3xl">✅</span>
+            </div>
+            <div>
+              <p className="text-white font-bold text-lg">Bildirim Alındı</p>
+              <p className="text-gray-500 text-sm mt-1">
+                Şikayetiniz belediyeye iletilmiştir.<br />En kısa sürede değerlendirilecektir.
+              </p>
+            </div>
+            <div className="pt-2">
+              <p className="text-gray-700 text-xs mb-4">Referans Konumu: {lat.toFixed(5)}, {lng.toFixed(5)}</p>
               <button
-                onClick={() => { onClose(); window.location.reload(); }}
-                className="mt-2 px-8 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition active:scale-95"
+                onClick={onClose}
+                className="px-10 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition active:scale-95 text-sm"
               >
                 Kapat
               </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Hata */}
-          {step === "error" && (
-            <div className="text-center py-10 space-y-3">
-              <div className="text-5xl">⚠️</div>
-              <p className="text-red-400 font-semibold">{errorMsg}</p>
-              <button
-                onClick={() => setStep("preview")}
-                className="px-8 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition"
-              >
-                Geri Dön
-              </button>
+        {/* Hata */}
+        {step === "error" && (
+          <div className="px-6 py-14 text-center space-y-4">
+            <div className="w-16 h-16 bg-red-500/15 rounded-full flex items-center justify-center mx-auto">
+              <span className="text-3xl">⚠️</span>
             </div>
-          )}
-        </div>
+            <div>
+              <p className="text-white font-bold text-lg">Gönderim Başarısız</p>
+              <p className="text-red-400 text-sm mt-1">{errorMsg}</p>
+            </div>
+            <button
+              onClick={() => setStep("form")}
+              className="px-10 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition active:scale-95 text-sm"
+            >
+              Geri Dön
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

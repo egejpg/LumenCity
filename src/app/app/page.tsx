@@ -38,7 +38,7 @@ export default function CitizenApp() {
           setUserLng(pos.coords.longitude);
         },
         () => {
-          setLocationWarning("Yıldız bilgilerini gösterebilmek için konum izni gereklidir.");
+          setLocationWarning("Doğru konum bilgisi ve yıldız bilgilerini gösterebilmek için konum izni gereklidir.");
         }
       );
     }
@@ -86,12 +86,20 @@ export default function CitizenApp() {
       {/* Bildir butonu - Sadece citizen rolü için */}
       <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-center pb-safe-bottom pb-8 gap-2 pointer-events-none">
         {role === "citizen" ? (
-          <button
-            onClick={() => setShowForm(true)}
-            className="pointer-events-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold rounded-2xl shadow-xl shadow-indigo-500/30 transition text-base flex items-center gap-2"
-          >
-            <span className="text-xl">🌌</span> Gökyüzünü Keşfet
-          </button>
+          <div className="pointer-events-auto flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-8 py-4 bg-amber-500 hover:bg-amber-400 active:scale-95 text-black font-bold rounded-2xl shadow-xl shadow-amber-500/30 transition text-base flex items-center gap-2"
+            >
+              <span className="text-xl">📋</span> Şikayet Bildir
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold rounded-2xl shadow-xl shadow-indigo-500/30 transition text-base flex items-center gap-2"
+            >
+              <span className="text-xl">🌌</span> Gökyüzünü Keşfet
+            </button>
+          </div>
         ) : (
           <div className="pointer-events-auto px-6 py-3 bg-gray-800/60 backdrop-blur border border-gray-700 rounded-2xl text-gray-300 text-sm text-center">
             ℹ️ Rapor göndermek için vatandaş rolüne geçiniz
