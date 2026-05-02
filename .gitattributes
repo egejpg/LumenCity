@@ -1,0 +1,10 @@
+# Tüm text dosyaları Git'te LF olarak saklanır, checkout'ta da LF kalır
+* text=auto eol=lf
+
+# Kesin binary — dokunma
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.h5 binary
+*.nc binary
