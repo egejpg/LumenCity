@@ -1,27 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { Report } from "@/types";
 
 export function useReports() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchReports = useCallback(() => {
+    setLoading(true);
     fetch("/api/reports")
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
-      .then((data) => {
-        if (Array.isArray(data)) setReports(data);
-      })
-      .catch(() => {
-        // Supabase henüz yapılandırılmadı — boş dizi döner
-        setReports([]);
-      })
+      .then((data) => setReports(Array.isArray(data) ? data : []))
+      .catch(() => setReports([]))
       .finally(() => setLoading(false));
   }, []);
 
-  return { reports, loading };
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
+
+  return { reports, loading, refetch: fetchReports };
 }
