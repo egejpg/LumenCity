@@ -25,13 +25,15 @@ DAYS_BACK = 30
 # ── NASA CMR API ──────────────────────────────────────────────
 CMR_SEARCH_URL     = "https://cmr.earthdata.nasa.gov/search/granules.json"
 PRODUCT_SHORT_NAME = "VNP46A2"
-PRODUCT_VERSION    = "002"
+PRODUCT_VERSION    = "2"
 PAGE_SIZE          = 50
 
 # ── HDF5 Katman ───────────────────────────────────────────────
-HDF5_LAYER   = "HDFEOS/GRIDS/VNP_Grid_DNB/Data Fields/DNB_BRDF-Corrected_NTL"
-SCALE_FACTOR = 0.1
-FILL_VALUE   = 65535
+HDF5_LAYER   = "HDFEOS/GRIDS/VIIRS_Grid_DNB_2d/Data Fields/Gap_Filled_DNB_BRDF-Corrected_NTL"
+LAT_LAYER    = "HDFEOS/GRIDS/VIIRS_Grid_DNB_2d/Data Fields/lat"
+LON_LAYER    = "HDFEOS/GRIDS/VIIRS_Grid_DNB_2d/Data Fields/lon"
+SCALE_FACTOR = 1.0      # v002 float32 — zaten nW/cm²/sr biriminde
+FILL_VALUE   = 65535.0
 
 # ── Çıktı Yolları (scripts/ klasöründen çalıştırılır) ─────────
 DATA_DIR        = "data/"                                     # indirilen .h5 dosyaları

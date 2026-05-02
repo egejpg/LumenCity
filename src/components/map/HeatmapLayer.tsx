@@ -15,7 +15,7 @@ export default function HeatmapLayer() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (HTMLCanvasElement.prototype as any).getContext = function(type: string, opts?: any) {
         if (type === "2d") opts = { ...opts, willReadFrequently: true };
-        return origGetContext.call(this, type, opts);
+        return origGetContext.call(this, type as any, opts);
       };
 
       // eslint-disable-next-line @typescript-eslint/no-require-imports

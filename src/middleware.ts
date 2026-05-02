@@ -1,35 +1,42 @@
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { createMiddlewareClient } from "@/lib/supabase/middleware";
 
-type CookieToSet = { name: string; value: string; options: Record<string, unknown> };
+// Giriş gerektiren rotalar
+const AUTH_ROUTES = ["/feed", "/create"];
+// Sadece staff erişebilir
+const STAFF_ROUTES = ["/dashboard"];
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+  const { supabase, response } = createMiddlewareClient(request);
+  const { pathname } = request.nextUrl;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet: CookieToSet[]) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options as Parameters<typeof supabaseResponse.cookies.set>[2])
-          );
-        },
-      },
+  // Oturumu yenile
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const needsAuth = AUTH_ROUTES.some((r) => pathname.startsWith(r));
+  const needsStaff = STAFF_ROUTES.some((r) => pathname.startsWith(r));
+
+  // Giriş yapılmamış → /login
+  if ((needsAuth || needsStaff) && !user) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Giriş yapılmış ama staff değil → /unauthorized
+  if (needsStaff && user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "staff") {
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
-  );
+  }
 
-  await supabase.auth.getUser();
-
-  return supabaseResponse;
+  return response;
 }
 
 export const config = {
