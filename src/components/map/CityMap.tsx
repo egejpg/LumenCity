@@ -1,8 +1,9 @@
 "use client";
 
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, useMap, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import L from "leaflet";
 import { useReports } from "@/hooks/useReports";
 import { useAnomalies } from "@/hooks/useAnomalies";
 import ReportPin from "./ReportPin";
@@ -18,14 +19,20 @@ interface CityMapProps {
   mode: "citizen" | "admin";
   layers?: LayerConfig;
   onZoneClick?: (zone: Zone) => void;
+  draftPin?: { lat: number; lng: number };
+}
+
+function MapUpdater({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
 }
 
 function LeafletIconFix() {
   const map = useMap();
   useEffect(() => {
-    // Leaflet default icon path fix for Next.js
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const L = require("leaflet");
     delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: "/leaflet/marker-icon-2x.png",
@@ -37,7 +44,46 @@ function LeafletIconFix() {
   return null;
 }
 
-export default function CityMap({ mode, layers, onZoneClick }: CityMapProps) {
+// Sabit kullanıcı konum pini
+function UserPin({
+  lat,
+  lng,
+}: {
+  lat: number;
+  lng: number;
+}) {
+  const pinIcon = L.divIcon({
+    html: `<div style="
+      width:36px;height:36px;
+      background:radial-gradient(circle at 40% 35%,#fde68a,#f59e0b);
+      border:3px solid #fbbf24;
+      border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);
+      box-shadow:0 0 0 4px rgba(245,158,11,0.25),0 4px 12px rgba(0,0,0,0.5);
+      display:flex;align-items:center;justify-content:center;
+    ">
+      <div style="transform:rotate(45deg);font-size:14px;">📍</div>
+    </div>`,
+    className: "",
+    iconAnchor: [18, 36],
+    iconSize: [36, 36],
+  });
+
+  return (
+    <Marker
+      position={[lat, lng]}
+      icon={pinIcon}
+      interactive={false}
+    />
+  );
+}
+
+export default function CityMap({
+  mode,
+  layers,
+  onZoneClick,
+  draftPin,
+}: CityMapProps) {
   const { reports } = useReports();
   const { anomalies } = useAnomalies();
 
@@ -49,7 +95,7 @@ export default function CityMap({ mode, layers, onZoneClick }: CityMapProps) {
     <MapContainer
       center={PILOT_CENTER}
       zoom={PILOT_ZOOM}
-      className="w-full h-full"
+      className="w-full h-full z-0"
       style={{ background: "#1a1a2e" }}
     >
       <LeafletIconFix />
@@ -73,6 +119,15 @@ export default function CityMap({ mode, layers, onZoneClick }: CityMapProps) {
             onZoneClick={onZoneClick}
           />
         ))}
+
+      {draftPin && <MapUpdater center={[draftPin.lat, draftPin.lng]} />}
+
+      {mode === "citizen" && draftPin && (
+        <UserPin
+          lat={draftPin.lat}
+          lng={draftPin.lng}
+        />
+      )}
     </MapContainer>
   );
 }

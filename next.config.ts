@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // leaflet ve leaflet.heat SSR'dan muaf tutulur (dynamic import ile halledilir)
+  reactStrictMode: false, // Leaflet haritasının mobilde çift render yüzünden çökmesini engeller
   webpack: (config) => {
     config.resolve.fallback = { fs: false };
     return config;

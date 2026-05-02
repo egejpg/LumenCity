@@ -1,15 +1,34 @@
-import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { MOCK_ANOMALIES } from "@/lib/mock-data";
 
-export async function GET() {
-  const supabase = createServerSupabaseClient();
+function hasSupabase() {
+  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
-  const { data, error } = await supabase
-    .from("anomalies")
-    .select("*")
-    .order("score", { ascending: false });
+export async function GET(req: NextRequest) {
+  // Role kontrolü - Sadece municipality anormalilikleri görebilir
+  const role = req.headers.get("x-user-role") || "citizen";
+  
+  if (role !== "municipality") {
+    return NextResponse.json(
+      { error: "Yalnızca belediye yetkililer anomali verilerine erişebilir" },
+      { status: 403 }
+    );
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (hasSupabase()) {
+    try {
+      const { createServerSupabaseClient } = await import("@/lib/supabase/server");
+      const supabase = createServerSupabaseClient();
+      const { data, error } = await supabase
+        .from("anomalies")
+        .select("*")
+        .order("score", { ascending: false });
+      if (!error && data) return NextResponse.json(data);
+    } catch {
+      // fallback to mock
+    }
+  }
 
-  return NextResponse.json(data);
+  return NextResponse.json(MOCK_ANOMALIES);
 }
