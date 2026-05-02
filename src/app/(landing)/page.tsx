@@ -112,7 +112,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="relative overflow-hidden rounded-2xl bg-gray-900 border border-red-500/20">
                   <div className="relative w-full aspect-[4/3]">
-                    <Image src="/images/sokak-lambalari-uyari.jpeg" alt="Yukarı bakan ışık yayan sokak lambası" fill className="object-cover" />
+                    <Image src="/images/yukarı-bakan-ısık.jpeg" alt="Yukarı bakan ışık yayan sokak lambası" fill className="object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                     <div className="absolute top-4 left-4">
                       <span className="text-[10px] font-bold tracking-widest uppercase bg-black/50 px-3 py-1 rounded-full text-white">⚠️ Önerilmeyen Lamba</span>
