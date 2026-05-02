@@ -1,6 +1,7 @@
 "use client";
 
 import { MapContainer, TileLayer, useMap, Marker } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 import L from "leaflet";
@@ -19,7 +20,9 @@ interface CityMapProps {
   mode: "citizen" | "admin";
   layers?: LayerConfig;
   onZoneClick?: (zone: Zone) => void;
+  onReportClick?: (report: import("@/types").Report) => void;
   draftPin?: { lat: number; lng: number };
+  refreshTrigger?: number;
 }
 
 function MapUpdater({ center }: { center: [number, number] }) {
@@ -82,9 +85,11 @@ export default function CityMap({
   mode,
   layers,
   onZoneClick,
+  onReportClick,
   draftPin,
+  refreshTrigger,
 }: CityMapProps) {
-  const { reports } = useReports();
+  const { reports } = useReports(refreshTrigger);
   const { anomalies } = useAnomalies();
 
   const showHeatmap    = mode === "admin" ? (layers?.heatmap    ?? true)  : false;
@@ -120,10 +125,36 @@ export default function CityMap({
 
       {showHeatmap && <HeatmapLayer />}
 
-      {showReports &&
-        reports.map((report) => (
-          <ReportPin key={report.id} report={report} />
-        ))}
+      {showReports && (
+        <MarkerClusterGroup
+          chunkedLoading
+          iconCreateFunction={(cluster) => {
+            const count = cluster.getChildCount();
+            return L.divIcon({
+              html: `<div style="
+                width:38px;height:38px;
+                background:rgba(245,158,11,0.9);
+                border:2px solid #fbbf24;
+                border-radius:50%;
+                display:flex;align-items:center;justify-content:center;
+                font-weight:700;font-size:13px;color:#000;
+                box-shadow:0 0 0 4px rgba(245,158,11,0.25);
+              ">${count}</div>`,
+              className: "",
+              iconSize: [38, 38],
+              iconAnchor: [19, 19],
+            });
+          }}
+        >
+          {reports.map((report) => (
+            <ReportPin
+              key={report.id}
+              report={report}
+              onReportClick={onReportClick ?? (() => {})}
+            />
+          ))}
+        </MarkerClusterGroup>
+      )}
 
       {showAnomalies &&
         anomalies.map((anomaly) => (

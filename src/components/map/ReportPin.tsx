@@ -3,31 +3,16 @@
 import { Marker } from "react-leaflet";
 import type { Report } from "@/types";
 
-import { useState } from "react";
-import StarryModal from "../citizen/StarryModal";
-
 interface ReportPinProps {
   report: Report;
+  onReportClick: (report: Report) => void;
 }
 
-export default function ReportPin({ report }: ReportPinProps) {
-  const [showModal, setShowModal] = useState(false);
-
+export default function ReportPin({ report, onReportClick }: ReportPinProps) {
   return (
-    <>
-      <Marker 
-        position={[report.lat, report.lng]}
-        eventHandlers={{
-          click: () => setShowModal(true)
-        }}
-      />
-      
-      {showModal && (
-        <StarryModal 
-          report={report} 
-          onClose={() => setShowModal(false)} 
-        />
-      )}
-    </>
+    <Marker
+      position={[report.lat, report.lng]}
+      eventHandlers={{ click: () => onReportClick(report) }}
+    />
   );
 }

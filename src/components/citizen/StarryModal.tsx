@@ -1,5 +1,12 @@
-import StarrySky from "./StarrySky";
-import type { Report } from "@/types";
+import type { Report, ReportCategory } from "@/types";
+
+const CATEGORY_META: Record<ReportCategory, { label: string; icon: string; color: string }> = {
+  bos_ofis_isigi: { label: "Gereksiz Işık Kullanımı", icon: "💡", color: "text-blue-400" },
+  reklam_panosu:  { label: "Reklam Panosu Şikayeti",  icon: "📋", color: "text-purple-400" },
+  sokak_lambasi:  { label: "Sokak Lambası Arızası",    icon: "🔦", color: "text-yellow-400" },
+  otopark:        { label: "Otopark Aydınlatması",     icon: "🅿️", color: "text-emerald-400" },
+  diger:          { label: "Diğer",                    icon: "📌", color: "text-gray-400" },
+};
 
 interface StarryModalProps {
   report: Report;
@@ -7,97 +14,70 @@ interface StarryModalProps {
 }
 
 export default function StarryModal({ report, onClose }: StarryModalProps) {
-  const hasStars = report.star_data && report.star_data.visibleStars;
+  const meta = CATEGORY_META[report.category] ?? CATEGORY_META["diger"];
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-gray-950 border border-indigo-500/30 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90dvh]">
-        
+    <div
+      className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-gray-950 border border-gray-800 rounded-3xl w-full max-w-lg shadow-2xl"
+        style={{ maxHeight: "85dvh", overflowY: "auto" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900/50">
-          <div>
-            <h3 className="text-white font-bold text-lg flex items-center gap-2">
-              <span className="text-xl">🌌</span> Gökyüzü Keşfi
-            </h3>
-            <p className="text-gray-400 text-xs mt-0.5">
-              📍 {report.lat.toFixed(4)}, {report.lng.toFixed(4)}
-            </p>
+        <div className="flex items-start justify-between px-6 pt-3 pb-4 border-b border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gray-900 rounded-2xl flex items-center justify-center text-2xl border border-gray-800">
+              {meta.icon}
+            </div>
+            <div>
+              <p className={`font-bold text-base ${meta.color}`}>{meta.label}</p>
+              <p className="text-gray-500 text-xs mt-0.5">
+                {new Date(report.created_at).toLocaleString("tr-TR", {
+                  day: "numeric", month: "long", year: "numeric",
+                  hour: "2-digit", minute: "2-digit"
+                })}
+              </p>
+            </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center justify-center transition"
+            className="mt-1 w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition"
           >
             ✕
           </button>
         </div>
 
-        <div className="overflow-y-auto p-4 space-y-4">
-          
-          {/* Before / After Images */}
-          {report.image_url ? (
-            <div className="space-y-4">
-              {/* İlk Hali (Before) */}
-              <div>
-                <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Öncesi (Işık Kirliliği)</h4>
-                <div className="relative w-full rounded-xl overflow-hidden border border-gray-800 bg-black">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src={report.image_url} 
-                    alt="Gökyüzü Öncesi" 
-                    className="w-full h-auto object-cover"
-                  />
-                </div>
-              </div>
-
-              {/* Sonrası (After) */}
-              {hasStars ? (
-                <div>
-                  <h4 className="text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-2">Sonrası (Yıldızlı Gökyüzü)</h4>
-                  <div className="relative w-full rounded-xl overflow-hidden border-2 border-indigo-500/50 bg-black shadow-lg shadow-indigo-500/20">
-                    <div className="pointer-events-none">
-                      <StarrySky 
-                        imageUrl={report.image_url}
-                        skyBox={report.star_data.skyBox}
-                        visibleStars={report.star_data.visibleStars}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-red-500 text-xs">
-                  Star data is missing! Raw: {JSON.stringify(report.star_data || null)}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="w-full h-40 bg-gray-900 flex items-center justify-center text-gray-500 rounded-xl border border-gray-800">
-              Fotoğraf bulunamadı
+        <div className="px-6 py-5 space-y-4">
+          {/* Fotoğraf */}
+          {report.image_url && (
+            <div>
+              <p className="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-2">Fotoğraf</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={report.image_url}
+                alt="Bildirim fotoğrafı"
+                className="w-full h-52 object-cover rounded-2xl border border-gray-800"
+              />
             </div>
           )}
 
-          {/* Stars List */}
-          {hasStars && (
-            <div className="bg-indigo-950/20 border border-indigo-500/20 rounded-xl p-4">
-              <h4 className="text-indigo-300 text-sm font-bold mb-3 flex items-center gap-1.5">
-                <span>🔭</span> Tespit Edilen Yıldızlar
-              </h4>
-              <ul className="space-y-3">
-                {report.star_data.visibleStars.map((star: any, i: number) => (
-                  <li key={i} className="flex gap-3 text-sm">
-                    <span className="text-indigo-400 mt-0.5 opacity-80">✦</span>
-                    <div>
-                      <strong className="text-gray-200 block mb-0.5">{star.name}</strong>
-                      <span className="text-gray-400 leading-relaxed text-xs">{star.description}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+          {/* Açıklama */}
+          {report.description && (
+            <div className="bg-gray-900 rounded-2xl px-4 py-3">
+              <p className="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-1.5">Açıklama</p>
+              <p className="text-gray-200 text-sm leading-relaxed">{report.description}</p>
             </div>
           )}
-          
-          <p className="text-xs text-gray-500 text-right">
-            Eklenme: {new Date(report.created_at).toLocaleDateString("tr-TR")}
-          </p>
+
+          {/* Konum */}
+          <div className="flex items-center gap-2 text-gray-600 text-xs">
+            <span>📍</span>
+            <span>{report.lat.toFixed(5)}, {report.lng.toFixed(5)}</span>
+          </div>
         </div>
       </div>
     </div>

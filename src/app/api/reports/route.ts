@@ -14,7 +14,13 @@ export async function GET() {
         .from("reports")
         .select("id, lat, lng, category, description, image_url, created_at")
         .order("created_at", { ascending: false });
-      if (!error && data) return NextResponse.json(data);
+      if (!error && data) {
+        // Runtime mock raporları (Supabase'e yazılamayanlar) ile birleştir
+        const supabaseIds = new Set(data.map((r: any) => r.id));
+        const { runtimeOnlyReports } = await import("@/lib/mock-data");
+        const extras = runtimeOnlyReports().filter((r) => !supabaseIds.has(r.id));
+        return NextResponse.json([...extras, ...data]);
+      }
     } catch {
       // fallback to mock
     }
@@ -24,9 +30,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  // Role kontrolü - Sadece citizen gönderebildir
   const role = req.headers.get("x-user-role") || "citizen";
-  
+
   if (role !== "citizen") {
     return NextResponse.json(
       { error: "Yalnızca vatandaşlar rapor gönderebilir" },
@@ -48,25 +53,24 @@ export async function POST(req: NextRequest) {
           category: body.category,
           description: body.description,
           image_url: body.image_url ?? null,
-          star_data: body.star_data ?? null,
         })
         .select()
         .single();
       if (!error && data) return NextResponse.json(data, { status: 201 });
-    } catch {
-      // fallback to mock
+      console.error("[reports POST] Supabase hatası:", error?.message);
+    } catch (e) {
+      console.error("[reports POST] Supabase exception:", e);
     }
   }
 
-  // Mock: in-memory kaydet
-  const newReport: any = {
+  // Supabase yoksa veya başarısız olduysa mock'a kaydet
+  const newReport = {
     id: `r-${Date.now()}`,
     lat: body.lat,
     lng: body.lng,
     category: body.category,
     description: body.description,
     image_url: body.image_url ?? null,
-    star_data: body.star_data ?? null,
     created_at: new Date().toISOString(),
   };
   addRuntimeReport(newReport);

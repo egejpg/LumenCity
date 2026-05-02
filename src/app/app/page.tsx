@@ -2,7 +2,10 @@
 
 import dynamic from "next/dynamic";
 import ReportForm from "@/components/citizen/ReportForm";
+import SkyExplorer from "@/components/citizen/SkyExplorer";
+import StarryModal from "@/components/citizen/StarryModal";
 import { useState, useEffect } from "react";
+import type { Report } from "@/types";
 import Link from "next/link";
 import { useRole } from "@/hooks/useRole";
 
@@ -25,6 +28,8 @@ const DEFAULT_LNG = 29.0333;
 export default function CitizenApp() {
   const { role } = useRole();
   const [showForm, setShowForm] = useState(false);
+  const [showSky, setShowSky] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [userLat, setUserLat] = useState(DEFAULT_LAT);
   const [userLng, setUserLng] = useState(DEFAULT_LNG);
   const [reportKey, setReportKey] = useState(0); // haritayı yenile
@@ -53,9 +58,10 @@ export default function CitizenApp() {
       {/* Harita */}
       <div className="absolute inset-0">
         <CityMap
-          key={reportKey}
           mode="citizen"
           draftPin={{ lat: userLat, lng: userLng }}
+          refreshTrigger={reportKey}
+          onReportClick={setSelectedReport}
         />
       </div>
 
@@ -94,7 +100,7 @@ export default function CitizenApp() {
               <span className="text-xl">📋</span> Şikayet Bildir
             </button>
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => setShowSky(true)}
               className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold rounded-2xl shadow-xl shadow-indigo-500/30 transition text-base flex items-center gap-2"
             >
               <span className="text-xl">🌌</span> Gökyüzünü Keşfet
@@ -107,13 +113,27 @@ export default function CitizenApp() {
         )}
       </div>
 
-      {/* Bildirim formu - Sadece citizen rolü için */}
       {showForm && role === "citizen" && (
         <ReportForm
           lat={userLat}
           lng={userLng}
           onClose={() => setShowForm(false)}
           onSuccess={handleSuccess}
+        />
+      )}
+
+      {showSky && (
+        <SkyExplorer
+          lat={userLat}
+          lng={userLng}
+          onClose={() => setShowSky(false)}
+        />
+      )}
+
+      {selectedReport && (
+        <StarryModal
+          report={selectedReport}
+          onClose={() => setSelectedReport(null)}
         />
       )}
     </main>
