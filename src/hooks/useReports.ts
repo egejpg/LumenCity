@@ -3,13 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Report } from "@/types";
 
-export function useReports() {
+export function useReports(refreshTrigger?: number) {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchReports = useCallback(() => {
     setLoading(true);
-    fetch("/api/reports")
+    fetch(`/api/reports?t=${Date.now()}`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -21,7 +21,7 @@ export function useReports() {
 
   useEffect(() => {
     fetchReports();
-  }, [fetchReports]);
+  }, [fetchReports, refreshTrigger]);
 
   return { reports, loading, refetch: fetchReports };
 }

@@ -142,6 +142,10 @@ export function addRuntimeReport(report: Report) {
   runtimeReports.unshift(report);
 }
 
+export function runtimeOnlyReports(): Report[] {
+  return [...runtimeReports];
+}
+
 export function getAllReports(): Report[] {
   return [...runtimeReports, ...MOCK_REPORTS];
 }
