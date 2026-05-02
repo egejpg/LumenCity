@@ -9,8 +9,17 @@ export function useReports() {
 
   useEffect(() => {
     fetch("/api/reports")
-      .then((r) => r.json())
-      .then((data) => setReports(data))
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) setReports(data);
+      })
+      .catch(() => {
+        // Supabase henüz yapılandırılmadı — boş dizi döner
+        setReports([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 import { useReports } from "@/hooks/useReports";
 import { useAnomalies } from "@/hooks/useAnomalies";

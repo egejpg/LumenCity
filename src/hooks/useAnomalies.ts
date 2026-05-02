@@ -9,8 +9,17 @@ export function useAnomalies() {
 
   useEffect(() => {
     fetch("/api/anomalies")
-      .then((r) => r.json())
-      .then((data) => setAnomalies(data))
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) setAnomalies(data);
+      })
+      .catch(() => {
+        // Supabase henüz yapılandırılmadı — boş dizi döner, bileşen kendi mock datasını kullanır
+        setAnomalies([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 

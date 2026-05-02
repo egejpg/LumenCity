@@ -3,15 +3,11 @@ import { formatKwh, formatTL } from "@/lib/utils";
 
 const TL_PER_KWH = 3.5;
 
-interface ScenarioCardsProps {
-  zone: Zone;
-}
-
-export default function ScenarioCards({ zone }: ScenarioCardsProps) {
+export default function ScenarioCards({ zone }: { zone: Zone }) {
   const scenarios: Scenario[] = [
     {
       key: "current",
-      label: "Mevcut Durum",
+      label: "Mevcut",
       kwh_per_year: Math.round(zone.current_kwh),
       saving_percent: 0,
       cost_saving_tl: 0,
@@ -25,42 +21,71 @@ export default function ScenarioCards({ zone }: ScenarioCardsProps) {
     },
     {
       key: "aggressive",
-      label: "Agresif Tasarruf",
+      label: "Agresif",
       kwh_per_year: Math.round(zone.current_kwh * 0.45),
       saving_percent: 55,
       cost_saving_tl: Math.round(zone.current_kwh * 0.55 * TL_PER_KWH),
     },
   ];
 
+  const maxKwh = scenarios[0].kwh_per_year;
+
   return (
-    <div className="flex flex-col gap-3">
-      {scenarios.map((s) => (
-        <div
-          key={s.key}
-          className={`rounded-lg p-3 border ${
-            s.key === "recommended"
-              ? "border-amber-500/50 bg-amber-950/30"
-              : "border-gray-700 bg-gray-800/50"
-          }`}
-        >
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm font-medium text-white">{s.label}</span>
-            {s.key === "recommended" && (
-              <span className="text-xs bg-amber-500 text-gray-950 font-bold px-2 py-0.5 rounded-full">
-                AI Önerisi
-              </span>
+    <div className="grid grid-cols-3 gap-2">
+      {scenarios.map((s) => {
+        const isRecommended = s.key === "recommended";
+        const isAggressive  = s.key === "aggressive";
+
+        return (
+          <div
+            key={s.key}
+            className={`relative rounded-xl p-3 border flex flex-col gap-1.5
+              ${isRecommended
+                ? "bg-amber-900/30 border-amber-600/50 ring-1 ring-amber-500/20"
+                : "bg-slate-700/40 border-slate-600"
+              }`}
+          >
+            {/* AI badge */}
+            {isRecommended && (
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-bold text-slate-900 bg-amber-400 px-2 py-[3px] rounded-full">
+                ✦ AI Önerisi
+              </div>
+            )}
+
+            <p className={`text-[10px] font-semibold mt-1 ${isRecommended ? "text-amber-400" : "text-slate-400"}`}>
+              {s.label}
+            </p>
+
+            <div>
+              <p className={`text-sm font-bold leading-tight ${
+                isRecommended ? "text-amber-300" : isAggressive ? "text-emerald-300" : "text-slate-200"
+              }`}>
+                {formatKwh(s.kwh_per_year)}
+              </p>
+              <p className="text-[9px] text-slate-500">/ yıl</p>
+            </div>
+
+            {/* Görsel çubuk */}
+            <div className="h-[3px] bg-slate-600 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full ${
+                  s.key === "current" ? "bg-red-400"
+                  : isRecommended    ? "bg-amber-400"
+                  :                    "bg-emerald-400"
+                }`}
+                style={{ width: `${(s.kwh_per_year / maxKwh) * 100}%` }}
+              />
+            </div>
+
+            {s.saving_percent > 0 && (
+              <div>
+                <p className="text-[9px] font-bold text-emerald-400">↓ %{s.saving_percent}</p>
+                <p className="text-[9px] text-slate-400">{formatTL(s.cost_saving_tl)}</p>
+              </div>
             )}
           </div>
-          <p className="text-amber-400 text-sm font-semibold">
-            {formatKwh(s.kwh_per_year)}/yıl
-          </p>
-          {s.saving_percent > 0 && (
-            <p className="text-green-400 text-xs mt-0.5">
-              %{s.saving_percent} azalma · {formatTL(s.cost_saving_tl)} tasarruf
-            </p>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
