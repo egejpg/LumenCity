@@ -1,72 +1,167 @@
 "use client";
 
-import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { createClientSupabaseClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createClientSupabaseClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function RegisterPage() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  async function handleGoogle() {
-    setLoading(true);
+  async function handleSubmit(e: { preventDefault(): void }) {
+    e.preventDefault();
     setError(null);
-    const supabase = createClientSupabaseClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) {
-      setError(error.message);
-      setLoading(false);
+
+    if (password !== passwordConfirm) {
+      setError("Şifreler eşleşmiyor.");
+      return;
     }
+
+    setLoading(true);
+
+    // Kullanıcıyı backend üzerinden oluştur (email doğrulaması yok)
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, username }),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      setError(result.error ?? "Kayıt olurken hata oluştu.");
+      setLoading(false);
+      return;
+    }
+
+    // Hemen giriş yap
+    const supabase = createClientSupabaseClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (signInError) {
+      setError("Hesap oluşturuldu fakat giriş yapılamadı. Lütfen giriş sayfasından deneyin.");
+      setLoading(false);
+      return;
+    }
+
+    router.push("/app");
+    router.refresh();
   }
 
   return (
-    <Card className="w-full max-w-sm bg-gray-900 border-gray-800 text-white">
-      <CardHeader className="text-center">
-        <Link href="/" className="text-amber-400 font-bold text-lg block mb-2">
-          LumenCity
+    <div className="w-full max-w-sm space-y-6">
+      {/* Logo */}
+      <div className="text-center">
+        <Link href="/">
+          <span className="text-3xl font-bold text-amber-400">LumenCity</span>
         </Link>
-        <CardTitle>Kayıt Ol</CardTitle>
-        <CardDescription className="text-gray-400">
-          Google hesabınızla saniyeler içinde başlayın.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+        <p className="text-gray-500 text-sm mt-1">Akıllı şehir aydınlatma platformu</p>
+      </div>
 
-        <Button
-          onClick={handleGoogle}
-          disabled={loading}
-          className="w-full bg-white hover:bg-gray-100 text-gray-900 font-semibold flex items-center justify-center gap-3"
-        >
-          <GoogleIcon />
-          {loading ? "Yönlendiriliyor..." : "Google ile Kayıt Ol"}
-        </Button>
+      <Card className="bg-gray-900/80 border-gray-800 backdrop-blur-sm">
+        <CardHeader className="pb-1 pt-4 space-y-0.5">
+          <h1 className="text-lg font-semibold text-white">Hesap Oluştur</h1>
+          <p className="text-gray-400 text-sm">
+            Kayıt ol, ışık israfını bildirmeye başla.
+          </p>
+        </CardHeader>
 
-        <p className="text-center text-sm text-gray-500">
-          Zaten hesabın var mı?{" "}
-          <Link href="/login" className="text-amber-400 hover:underline">
-            Giriş yap
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
+        <CardContent className="pt-3">
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Kullanıcı Adı</label>
+              <Input
+                type="text"
+                placeholder="kullanici_adi"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                required
+                minLength={3}
+                maxLength={30}
+                className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-600 h-10"
+              />
+              <p className="text-xs text-gray-600 mt-0.5">Küçük harf, rakam ve alt çizgi.</p>
+            </div>
 
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18">
-      <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
-      <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2.04a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/>
-      <path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/>
-      <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z"/>
-    </svg>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">E-posta</label>
+              <Input
+                type="email"
+                placeholder="ornek@mail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-600 h-10"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Şifre</label>
+              <Input
+                type="password"
+                placeholder="En az 6 karakter"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-600 h-10"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Şifre Tekrar</label>
+              <Input
+                type="password"
+                placeholder="Şifreyi tekrar gir"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                required
+                className={`bg-gray-800 border-gray-700 text-white placeholder:text-gray-600 h-10 ${
+                  passwordConfirm && password !== passwordConfirm
+                    ? "border-red-500"
+                    : passwordConfirm && password === passwordConfirm
+                    ? "border-green-600"
+                    : ""
+                }`}
+              />
+            </div>
+
+            {error && (
+              <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={loading || (!!passwordConfirm && password !== passwordConfirm)}
+              className="w-full h-10 bg-amber-500 hover:bg-amber-400 text-gray-950 font-semibold"
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-gray-950 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                "Kayıt Ol →"
+              )}
+            </Button>
+
+            <p className="text-center text-sm text-gray-500 pt-1">
+              Zaten hesabın var mı?{" "}
+              <Link href="/login" className="text-amber-400 hover:text-amber-300 font-medium">
+                Giriş yap
+              </Link>
+            </p>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
