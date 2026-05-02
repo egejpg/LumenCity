@@ -51,6 +51,7 @@ export type LayerConfig = {
   heatmap: boolean;
   reports: boolean;
   anomalies: boolean;
+  satellite: boolean;
 };
 
 export type UserRole = "citizen" | "municipality";

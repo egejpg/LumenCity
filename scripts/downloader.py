@@ -40,19 +40,22 @@ def search_granules() -> list[dict]:
     _check_token()
     start_date, end_date = _date_range()
 
-    params = {
-        "short_name":  PRODUCT_SHORT_NAME,
-        "version":     PRODUCT_VERSION,
-        "temporal[]":  f"{start_date},{end_date}",
+    # temporal[] köşeli parantezleri requests tarafından encode edilmesin diye
+    # URL'yi elle oluşturuyoruz
+    from urllib.parse import urlencode
+    base = {
+        "short_name":   PRODUCT_SHORT_NAME,
+        "version":      PRODUCT_VERSION,
         "bounding_box": BBOX_TURKEY,
-        "page_size":   PAGE_SIZE,
-        "sort_key":    "start_date",
+        "page_size":    PAGE_SIZE,
+        "sort_key":     "-start_date",
     }
+    url = f"{CMR_SEARCH_URL}?{urlencode(base)}&temporal[]={start_date},{end_date}"
 
     print(f"[CMR] {PRODUCT_SHORT_NAME} v{PRODUCT_VERSION} | "
           f"{start_date[:10]} → {end_date[:10]}")
 
-    resp = requests.get(CMR_SEARCH_URL, params=params, timeout=30)
+    resp = requests.get(url, timeout=30)
     resp.raise_for_status()
 
     entries = resp.json().get("feed", {}).get("entry", [])

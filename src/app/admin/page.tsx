@@ -24,14 +24,15 @@ const ZoneDetailPanel = dynamic(
 );
 
 const LAYER_CONFIG = [
-  { key: "heatmap"   as const, label: "NASA Heatmap",          dot: "bg-amber-400" },
-  { key: "reports"   as const, label: "Vatandaş Bildirimleri", dot: "bg-blue-400"  },
-  { key: "anomalies" as const, label: "AI Anomalileri",        dot: "bg-red-400"   },
+  { key: "heatmap"   as const, label: "NASA Heatmap",          dot: "bg-amber-400"  },
+  { key: "reports"   as const, label: "Vatandaş Bildirimleri", dot: "bg-blue-400"   },
+  { key: "anomalies" as const, label: "AI Anomalileri",        dot: "bg-red-400"    },
+  { key: "satellite" as const, label: "NASA Uydu (Black Marble)", dot: "bg-cyan-400" },
 ];
 
 export default function AdminDashboard() {
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
-  const [layers, setLayers] = useState({ heatmap: true, reports: true, anomalies: true });
+  const [layers, setLayers] = useState({ heatmap: true, reports: true, anomalies: true, satellite: false });
 
   function toggleLayer(key: keyof typeof layers) {
     setLayers((l) => ({ ...l, [key]: !l[key] }));
