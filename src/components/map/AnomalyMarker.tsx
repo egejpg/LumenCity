@@ -19,18 +19,15 @@ export default function AnomalyMarker({ anomaly, onZoneClick }: AnomalyMarkerPro
       pathOptions={{ color, fillColor: color, fillOpacity: 0.6, weight: 2 }}
       eventHandlers={{
         click: () => {
-          if (onZoneClick) {
-            // Fetch zone and pass up — simplified: pass zone_id as stub
-            onZoneClick({
-              id: anomaly.zone_id,
-              name: anomaly.poi_type,
-              geojson: {} as GeoJSON.Feature,
-              anomaly_count: 1,
-              potential_saving_kwh:
-                (anomaly.light_intensity - anomaly.expected_intensity) * 8760,
-              current_kwh: anomaly.light_intensity * 8760,
-            });
-          }
+          if (!onZoneClick) return;
+          onZoneClick({
+            id: anomaly.zone_id,
+            name: anomaly.poi_type,
+            geojson: {} as GeoJSON.Feature,
+            anomaly_count: 1,
+            current_kwh: Math.round(anomaly.light_intensity * 8760),
+            potential_saving_kwh: Math.round((anomaly.light_intensity - anomaly.expected_intensity) * 8760),
+          });
         },
       }}
     >

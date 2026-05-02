@@ -31,14 +31,15 @@ function buildScenarios(currentKwh: number): Scenario[] {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const supabase = createServerSupabaseClient();
 
   const { data: zone, error } = await supabase
     .from("zones")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 404 });
@@ -46,7 +47,7 @@ export async function GET(
   const { data: anomalies } = await supabase
     .from("anomalies")
     .select("*")
-    .eq("zone_id", params.id)
+    .eq("zone_id", id)
     .order("score", { ascending: false });
 
   return NextResponse.json({

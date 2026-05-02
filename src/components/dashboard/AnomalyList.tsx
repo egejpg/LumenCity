@@ -1,16 +1,7 @@
 "use client";
 
-import type { Anomaly, Zone } from "@/types";
-
-// MOCK DATA — Supabase bağlandığında bu bloğu kaldır, useAnomalies() hookunu aç
-const MOCK_ANOMALIES: Anomaly[] = [
-  { id: "a1", zone_id: "z1", lat: 40.9833, lng: 29.0333, score: 92, light_intensity: 0.90, expected_intensity: 0.15, poi_type: "Boş Ofis Binası",     created_at: "2026-05-01T22:00:00Z" },
-  { id: "a2", zone_id: "z2", lat: 40.9850, lng: 29.0350, score: 78, light_intensity: 0.80, expected_intensity: 0.25, poi_type: "Kapalı Otopark",       created_at: "2026-05-01T23:00:00Z" },
-  { id: "a3", zone_id: "z3", lat: 40.9820, lng: 29.0310, score: 65, light_intensity: 0.75, expected_intensity: 0.35, poi_type: "Reklam Panosu",        created_at: "2026-05-02T00:00:00Z" },
-  { id: "a4", zone_id: "z4", lat: 40.9840, lng: 29.0370, score: 51, light_intensity: 0.65, expected_intensity: 0.40, poi_type: "Cadde Aydınlatması",   created_at: "2026-05-02T01:00:00Z" },
-  { id: "a5", zone_id: "z5", lat: 40.9860, lng: 29.0320, score: 44, light_intensity: 0.60, expected_intensity: 0.42, poi_type: "AVM Cephesi",          created_at: "2026-05-02T01:30:00Z" },
-  { id: "a6", zone_id: "z6", lat: 40.9845, lng: 29.0338, score: 38, light_intensity: 0.55, expected_intensity: 0.43, poi_type: "Park Aydınlatması",    created_at: "2026-05-02T02:00:00Z" },
-];
+import type { Zone } from "@/types";
+import { useAnomalies } from "@/hooks/useAnomalies";
 
 const POI_ICON: Record<string, string> = {
   "Boş Ofis Binası":    "🏢",
@@ -33,9 +24,7 @@ interface AnomalyListProps {
 }
 
 export default function AnomalyList({ onSelectZone, selectedZoneId }: AnomalyListProps) {
-  // const { anomalies, loading } = useAnomalies(); // MOCK: Supabase hazır olunca aç
-  const anomalies = MOCK_ANOMALIES; // MOCK
-  const loading = false;            // MOCK
+  const { anomalies, loading } = useAnomalies();
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
@@ -61,16 +50,16 @@ export default function AnomalyList({ onSelectZone, selectedZoneId }: AnomalyLis
             return (
               <button
                 key={a.id}
-                onClick={() =>
+                onClick={() => {
                   onSelectZone({
                     id: a.zone_id,
                     name: a.poi_type,
                     geojson: {} as GeoJSON.Feature,
                     anomaly_count: 1,
-                    potential_saving_kwh: (a.light_intensity - a.expected_intensity) * 8760,
-                    current_kwh: a.light_intensity * 8760,
-                  })
-                }
+                    current_kwh: Math.round(a.light_intensity * 8760),
+                    potential_saving_kwh: Math.round((a.light_intensity - a.expected_intensity) * 8760),
+                  });
+                }}
                 className={`w-full text-left rounded-lg border-l-2 ${s.border} px-3 py-2.5 transition-all duration-150
                   ${isSelected
                     ? "bg-slate-600/60 ring-1 ring-slate-500/50"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import CameraCapture from "./CameraCapture";
 
 interface ReportFormProps {
@@ -12,6 +12,14 @@ export default function ReportForm({ onClose }: ReportFormProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [aiResult, setAiResult] = useState<{ category: string; description: string } | null>(null);
+  const [coords, setCoords] = useState({ lat: 40.9833, lng: 29.0333 });
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+    );
+  }, []);
 
   async function handleCapture(file: File) {
     setImageFile(file);
@@ -35,8 +43,8 @@ export default function ReportForm({ onClose }: ReportFormProps) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        lat: 40.9833,
-        lng: 29.0333,
+        lat: coords.lat,
+        lng: coords.lng,
         category: aiResult.category,
         description: aiResult.description,
         image_url: null,
@@ -87,7 +95,7 @@ export default function ReportForm({ onClose }: ReportFormProps) {
             <p className="text-white font-semibold">Bildirim gönderildi!</p>
             <p className="text-gray-400 text-sm mt-1">Teşekkürler, belediye inceleyecek.</p>
             <button
-              onClick={onClose}
+              onClick={() => { onClose(); window.location.reload(); }}
               className="mt-4 px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
             >
               Kapat

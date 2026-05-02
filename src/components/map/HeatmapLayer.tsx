@@ -10,6 +10,14 @@ export default function HeatmapLayer() {
     let heatLayer: unknown;
 
     async function init() {
+      // willReadFrequently: leaflet.heat yüklenmeden önce canvas patch
+      const origGetContext = HTMLCanvasElement.prototype.getContext;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (HTMLCanvasElement.prototype as any).getContext = function(type: string, opts?: any) {
+        if (type === "2d") opts = { ...opts, willReadFrequently: true };
+        return origGetContext.call(this, type, opts);
+      };
+
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const L = require("leaflet");
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -27,10 +35,10 @@ export default function HeatmapLayer() {
       );
 
       heatLayer = (L as { heatLayer: Function }).heatLayer(points, {
-        radius: 25,
-        blur: 15,
-        maxZoom: 17,
-        gradient: { 0.2: "#0000ff", 0.5: "#ffff00", 1.0: "#ff0000" },
+        radius: 18,
+        blur: 12,
+        maxZoom: 18,
+        gradient: { 0.2: "#1d4ed8", 0.5: "#f59e0b", 0.8: "#ef4444", 1.0: "#dc2626" },
       }).addTo(map);
     }
 

@@ -30,7 +30,15 @@ const CHIP_STYLES: Record<string, string> = {
 export default function AdminTopBar() {
   return (
     <header className="flex items-center justify-between px-5 h-12 bg-slate-800 border-b border-slate-700 shrink-0 z-20">
-      {/* Logo */}
+      {/* Geri + Logo */}
+      <div className="flex items-center gap-2">
+        <Link
+          href="/"
+          className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-400 hover:text-white transition-colors text-sm"
+          title="Ana Sayfaya Dön"
+        >
+          ←
+        </Link>
       <Link href="/" className="flex items-center gap-2.5">
         <div className="flex items-center gap-[3px]">
           <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
@@ -43,6 +51,7 @@ export default function AdminTopBar() {
         <div className="h-3 w-px bg-slate-600 mx-0.5" />
         <span className="text-[11px] text-slate-400 font-medium">Belediye Paneli</span>
       </Link>
+      </div>
 
       {/* Stat chips */}
       <div className="flex items-center gap-1.5">

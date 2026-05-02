@@ -1,13 +1,13 @@
 "use client";
 
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { useEffect } from "react";
 import { useReports } from "@/hooks/useReports";
 import { useAnomalies } from "@/hooks/useAnomalies";
 import ReportPin from "./ReportPin";
 import AnomalyMarker from "./AnomalyMarker";
 import HeatmapLayer from "./HeatmapLayer";
-import type { LayerConfig, Zone } from "@/types";
+import type { Anomaly, LayerConfig, Zone } from "@/types";
 
 // Moda Mahallesi merkezi
 const PILOT_CENTER: [number, number] = [40.9833, 29.0333];
@@ -17,6 +17,33 @@ interface CityMapProps {
   mode: "citizen" | "admin";
   layers?: LayerConfig;
   onZoneClick?: (zone: Zone) => void;
+}
+
+// Haritaya tıklayınca en yakın anomaliyi bulup onZoneClick'i tetikler (heatmap blob'ları için)
+function HeatmapClickHandler({ anomalies, onZoneClick }: { anomalies: Anomaly[]; onZoneClick?: (zone: Zone) => void }) {
+  useMapEvents({
+    click: (e) => {
+      if (!onZoneClick || anomalies.length === 0) return;
+      const { lat, lng } = e.latlng;
+      let nearest = anomalies[0];
+      let minDist = Infinity;
+      for (const a of anomalies) {
+        const d = Math.hypot(a.lat - lat, a.lng - lng);
+        if (d < minDist) { minDist = d; nearest = a; }
+      }
+      // Sadece ~300m yakınındaki noktalara tepki ver (derece cinsinden ~0.003)
+      if (minDist > 0.003) return;
+      onZoneClick({
+        id: nearest.zone_id,
+        name: nearest.poi_type,
+        geojson: {} as GeoJSON.Feature,
+        anomaly_count: 1,
+        current_kwh: Math.round(nearest.light_intensity * 8760),
+        potential_saving_kwh: Math.round((nearest.light_intensity - nearest.expected_intensity) * 8760),
+      });
+    },
+  });
+  return null;
 }
 
 function LeafletIconFix() {
@@ -58,6 +85,7 @@ export default function CityMap({ mode, layers, onZoneClick }: CityMapProps) {
       />
 
       {showHeatmap && <HeatmapLayer />}
+      {showHeatmap && <HeatmapClickHandler anomalies={anomalies} onZoneClick={onZoneClick} />}
 
       {showReports &&
         reports.map((report) => (
