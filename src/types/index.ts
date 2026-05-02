@@ -12,6 +12,7 @@ export interface Report {
   category: ReportCategory;
   description: string;
   image_url: string | null;
+  star_data?: any; // Gökyüzü analiz verisi (Before/After için)
   created_at: string;
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRole } from "./useRole";
 import type { Anomaly } from "@/types";
 
 interface UseAnomaliesOptions {
@@ -9,6 +10,7 @@ interface UseAnomaliesOptions {
 }
 
 export function useAnomalies(options: UseAnomaliesOptions = {}) {
+  const { role } = useRole();
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +21,11 @@ export function useAnomalies(options: UseAnomaliesOptions = {}) {
 
     const url = `/api/anomalies${params.toString() ? `?${params}` : ""}`;
 
-    fetch(url)
+    fetch(url, {
+      headers: {
+        "x-user-role": role
+      }
+    })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -27,7 +33,7 @@ export function useAnomalies(options: UseAnomaliesOptions = {}) {
       .then((data) => setAnomalies(Array.isArray(data) ? data : []))
       .catch(() => setAnomalies([]))
       .finally(() => setLoading(false));
-  }, [options.zoneId, options.minScore]);
+  }, [options.zoneId, options.minScore, role]);
 
   return { anomalies, loading };
 }
