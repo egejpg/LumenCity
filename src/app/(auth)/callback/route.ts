@@ -5,7 +5,6 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
 
   if (code) {
     const cookieStore = await cookies();
@@ -14,13 +13,11 @@ export async function GET(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
+          getAll() { return cookieStore.getAll(); },
+          setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
             try {
               cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
+                cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2])
               );
             } catch {}
           },
@@ -28,9 +25,18 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(new URL(next, request.url));
+    const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error && user) {
+      // Role'e göre yönlendir
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      const redirectTo = profile?.role === "staff" ? "/dashboard" : "/feed";
+      return NextResponse.redirect(new URL(redirectTo, request.url));
     }
   }
 
