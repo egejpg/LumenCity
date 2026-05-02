@@ -58,10 +58,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-<<<<<<< HEAD
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data, { status: 201 });
-=======
   // Mock: in-memory kaydet
   const newReport: any = {
     id: `r-${Date.now()}`,
@@ -75,5 +71,4 @@ export async function POST(req: NextRequest) {
   };
   addRuntimeReport(newReport);
   return NextResponse.json(newReport, { status: 201 });
->>>>>>> feature/image
 }

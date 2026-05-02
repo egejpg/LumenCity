@@ -7,7 +7,7 @@ NASA Earthdata token almak için:
 """
 
 # ── Kimlik Doğrulama ──────────────────────────────────────────
-EARTHDATA_TOKEN = "BURAYA_TOKEN_GİR"
+EARTHDATA_TOKEN = "eyJ0eXAiOiJKV1QiLCJvcmlnaW4iOiJFYXJ0aGRhdGEgTG9naW4iLCJzaWciOiJlZGxqd3RwdWJrZXlfb3BzIiwiYWxnIjoiUlMyNTYifQ.eyJ0eXBlIjoiVXNlciIsInVpZCI6ImVnZWpwZyIsImV4cCI6MTc4MjkyNjQ5NSwiaWF0IjoxNzc3NzQyNDk1LCJpc3MiOiJodHRwczovL3Vycy5lYXJ0aGRhdGEubmFzYS5nb3YiLCJpZGVudGl0eV9wcm92aWRlciI6ImVkbF9vcHMiLCJhY3IiOiJlZGwiLCJhc3N1cmFuY2VfbGV2ZWwiOjN9.w1ijQF1fh_JCP-ns8qdyAgXeyS8Z6h5b0gjvLvPJk43OLNcUSEoO4Zszj3MTFjM0TapYnxOz1Wxg-zdWp9iVxJG_qAz5Mk5fE4hBsXzQRedCJGq1nCfnIAGbMKzJjTXIyBOrDoEMSRIy1SIz2DSKa8vtet4fQujLAQ26ki5PpQmnl8oKQUFAXBDvYU0qXnIS-rhhb37MokCOlZE3q-rfo3QGEGRFAxHhFQpdrkKm3HWBhLBsPk1aMoxoh3lITBZmrkJWrjgBEBsldGM-yH1L_bZ-duUJkGFArIsFcCOSkI-CsV3mq1sompAGUeVsbh_9LTHw4YMoI7f3LmLaJ9HcMA"
 
 # ── Coğrafi Sınırlar ──────────────────────────────────────────
 # Türkiye geneli: veri çekme için

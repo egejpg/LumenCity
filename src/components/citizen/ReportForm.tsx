@@ -94,22 +94,7 @@ export default function ReportForm({ onClose, onSuccess, lat, lng }: ReportFormP
     if (!starData) return;
     setStep("uploading");
 
-<<<<<<< HEAD
-    // TODO: upload image to Supabase Storage, get URL
-    await fetch("/api/reports", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        lat: coords.lat,
-        lng: coords.lng,
-        category: aiResult.category,
-        description: aiResult.description,
-        image_url: null,
-      }),
-    });
-=======
     let image_url: string | null = null;
->>>>>>> feature/image
 
     // Storage upload
     if (imageFile) {
@@ -271,21 +256,6 @@ export default function ReportForm({ onClose, onSuccess, lat, lng }: ReportFormP
             </div>
           )}
 
-<<<<<<< HEAD
-        {step === "done" && (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-3">✅</div>
-            <p className="text-white font-semibold">Bildirim gönderildi!</p>
-            <p className="text-gray-400 text-sm mt-1">Teşekkürler, belediye inceleyecek.</p>
-            <button
-              onClick={() => { onClose(); window.location.reload(); }}
-              className="mt-4 px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
-            >
-              Kapat
-            </button>
-          </div>
-        )}
-=======
           {/* ADIM 3: Upload + Gönderme */}
           {step === "uploading" && (
             <div className="text-center py-12 space-y-3">
@@ -301,7 +271,7 @@ export default function ReportForm({ onClose, onSuccess, lat, lng }: ReportFormP
               <p className="text-white font-bold text-lg">Haritaya Eklendi!</p>
               <p className="text-gray-400 text-sm">Gökyüzü keşfiniz başarıyla haritaya eklendi.</p>
               <button
-                onClick={onClose}
+                onClick={() => { onClose(); window.location.reload(); }}
                 className="mt-2 px-8 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition active:scale-95"
               >
                 Kapat
@@ -323,7 +293,6 @@ export default function ReportForm({ onClose, onSuccess, lat, lng }: ReportFormP
             </div>
           )}
         </div>
->>>>>>> feature/image
       </div>
     </div>
   );

@@ -42,11 +42,3 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(MOCK_ANOMALIES);
 }
-    } catch {
-      // fallback to mock
-    }
-  }
-
-  return NextResponse.json(MOCK_ANOMALIES);
->>>>>>> feature/image
-}
