@@ -5,6 +5,8 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { createClientSupabaseClient } from "@/lib/supabase/client";
+import StarField from "@/components/StarField";
+import LightPollutionSlider from "@/components/LightPollutionSlider";
 
 const HaloSimulation = dynamic(() => import("@/components/halo/HaloSimulation"), {
   ssr: false,
@@ -38,13 +40,13 @@ export default function LandingPage() {
   return (
     <main className="text-white overflow-x-hidden">
 
-      {/* ── Sabit yıldızlı arkaplan (CSS sınıfı — JS string yok) ── */}
-      <div className="starry-bg fixed inset-0 -z-10" />
-
       {/* ── Sabit Globe ── */}
       <div className="fixed inset-0 z-0">
         <EarthGlobe />
       </div>
+
+      {/* ── İnteraktif yıldız tuvali — globe üstünde, pointer-events-none ── */}
+      <StarField />
 
       {/* ── Navbar ── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#0a0a1a]/80 backdrop-blur-sm border-b border-gray-800/50">
@@ -79,19 +81,39 @@ export default function LandingPage() {
         {/* Hero: şeffaf, globe görünür ve sürüklenebilir */}
         <section className="h-screen flex flex-col items-center justify-center">
           <p className="text-xs font-semibold tracking-[0.3em] text-amber-400/70 uppercase mb-4">
-            NASA Black Marble · Gece Işık Haritası
+            IŞIK KİRLİLİĞİ · YAPAY ZEKA · KATILIMCI ŞEHİR
           </p>
           <h1 className="text-5xl md:text-6xl font-bold text-center leading-tight mb-5">
-            Şehrin Işığını<br />
-            <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">Optimize Et</span>
+            Şehrin <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">Karanlığa</span> İhtiyacı Var
           </h1>
           <p className="text-lg text-gray-400 text-center max-w-xl px-6">
-            Vatandaş bildiriyor. Yapay zeka doğruluyor.<br />Belediye karar veriyor. Tasarruf görselleşiyor.
+            Boşa yanan her ışık, görünmeyen bir yıldız. Vatandaş bildiriyor, yapay zeka analiz ediyor, belediye karar veriyor — gökyüzü geri kazanıyor.
           </p>
           <div className="flex gap-4 mt-8 pointer-events-auto">
-            <Link href={loggedIn ? "/app" : "/login"} className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-gray-950 font-semibold rounded-xl transition shadow-lg shadow-amber-500/20">Işık Kirliliği Bildir →</Link>
+            <Link href={loggedIn ? "/app" : "/login"} className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-gray-950 font-semibold rounded-xl transition shadow-lg shadow-amber-500/20">Bildirim Yap →</Link>
             <Link href={loggedIn ? "/admin" : "/login?type=staff"} className="px-6 py-3 border border-amber-500/50 text-amber-400 hover:bg-amber-500/10 font-semibold rounded-xl transition backdrop-blur-sm">Belediye Paneli</Link>
           </div>
+        </section>
+
+        {/* ── Işık Kirliliği Slider ── */}
+        <section className="px-6 py-24 pointer-events-auto select-auto">
+          <div className="text-center mb-10">
+            <p className="text-xs font-semibold tracking-[0.3em] text-amber-400/70 uppercase mb-3">
+              GERÇEK vs MÜMKÜN
+            </p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Sürükle, Farkı Gör
+            </h2>
+            <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto">
+              Şehir ışıkları olmasaydı, başımızın üstünde Samanyolu olurdu. Aşağıdaki çubuğu sürükleyerek gökyüzünün gerçek yüzünü keşfet.
+            </p>
+          </div>
+
+          <LightPollutionSlider />
+
+          <p className="text-center text-sm text-gray-500 mt-5">
+            💡 Çubuğu sağa-sola sürükleyin
+          </p>
         </section>
 
         {/* ── Before / After — pointer-events-auto: normal etkileşim ── */}
@@ -112,37 +134,6 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col gap-4 mb-6">
-
-            <div className="flex flex-col gap-3">
-              <div className="relative overflow-hidden rounded-2xl" style={{ height: "400px" }}>
-                <Image src="/images/ai-edited.jpg" alt="Işık kirliliği olan ve olmayan gökyüzü karşılaştırması" fill className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                <div className="absolute top-4 left-4">
-                  <span className="text-[10px] font-bold tracking-widest text-violet-300/90 uppercase bg-black/50 px-2.5 py-1 rounded-full backdrop-blur-sm">✦ AI İşlemi</span>
-                </div>
-              </div>
-              <div className="px-1">
-                <p className="text-sm font-medium text-white mb-1">Before / After — Tek Karede</p>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  Kullanıcının yüklediği gökyüzü fotoğrafı işleniyor: solda ışık kirliliğiyle boğulmuş kent gökyüzü, sağda aynı gecenin yapay ışık olmadan nasıl görüneceği.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <div className="relative overflow-hidden rounded-2xl w-full">
-                <Image src="/images/Bortle-Scale_Credit_International-Dark-Sky-Association-1.jpg" alt="Bortle Skalası — ışık kirliliği seviyeleri" width={1200} height={600} className="w-3/4 h-auto object-contain mx-auto" />
-                <div className="absolute top-4 left-4">
-                  <span className="text-[10px] font-bold tracking-widest text-orange-300/90 uppercase bg-black/50 px-2.5 py-1 rounded-full backdrop-blur-sm">Işık Kirliliği</span>
-                </div>
-              </div>
-              <div className="px-1">
-                <p className="text-sm font-medium text-white mb-1">Bortle Skalası</p>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  Gökyüzü parlaklığını 1'den 9'a ölçer. 1 = bozulmamış karanlık gökyüzü, 9 = iç kent. İstanbul merkezi <span className="text-orange-400">8–9 bandında</span> seyrediyor.
-                </p>
-              </div>
-            </div>
 
             <div className="relative mb-8">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -176,33 +167,6 @@ export default function LandingPage() {
 
           </div>
 
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 hover:border-violet-500/30 transition max-w-xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-9 h-9 rounded-xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-lg">📸</div>
-              <div>
-                <p className="font-bold text-white">Vatandaş Uygulaması</p>
-                <p className="text-xs text-violet-400">Sosyal platform</p>
-              </div>
-            </div>
-            <div className="space-y-5">
-              {[
-                { n: "01", t: "Gökyüzü Fotoğrafı Çek", d: "Geceleri şehrin üzerindeki kirli gökyüzünü fotoğrafla." },
-                { n: "02", t: "AI Dönüştürür",          d: "AI, ışık kirliliğini kaldırarak gerçek gece gökyüzünü gösterir." },
-                { n: "03", t: "Paylaş & Bildir",        d: "Before/after karşılaştırmasını paylaş, belediyeye bildir." },
-              ].map(({ n, t, d }) => (
-                <div key={n} className="flex gap-4">
-                  <span className="text-[11px] font-bold text-violet-400/60 mt-0.5 w-5 shrink-0">{n}</span>
-                  <div>
-                    <p className="text-sm font-semibold text-white mb-0.5">{t}</p>
-                    <p className="text-xs text-gray-500 leading-relaxed">{d}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Link href="/app" className="mt-8 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-violet-500/15 border border-violet-500/25 text-violet-300 text-sm font-medium hover:bg-violet-500/25 transition">
-              Uygulamayı Aç →
-            </Link>
-          </div>
         </section>
 
         {/* ── Halo Simülasyonu ── */}
