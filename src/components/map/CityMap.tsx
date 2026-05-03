@@ -1,6 +1,6 @@
 "use client";
 
-import { MapContainer, TileLayer, useMap, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, useMap, Marker, ZoomControl } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
@@ -104,9 +104,11 @@ export default function CityMap({
       minZoom={6}
       maxBounds={[[33, 22], [45, 50]]}
       maxBoundsViscosity={1.0}
+      zoomControl={false}
       className="w-full h-full z-0"
       style={{ background: "#1a1a2e" }}
     >
+      <ZoomControl position="bottomleft" />
       <LeafletIconFix />
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"

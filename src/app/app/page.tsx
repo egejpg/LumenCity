@@ -67,7 +67,14 @@ export default function CitizenApp() {
 
       {/* Üst bar */}
       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 pt-safe-top pt-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="flex items-center justify-center w-9 h-9 bg-gray-900/80 backdrop-blur border border-gray-700 rounded-full text-gray-300 hover:border-amber-500/50 hover:text-amber-400 transition"
+            title="Ana Sayfaya Dön"
+          >
+            ←
+          </Link>
           <span className="text-2xl">💡</span>
           <span className="text-amber-400 font-bold text-lg tracking-tight">LumenCity</span>
         </div>
