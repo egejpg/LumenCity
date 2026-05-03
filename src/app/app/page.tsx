@@ -7,7 +7,6 @@ import StarryModal from "@/components/citizen/StarryModal";
 import { useState, useEffect } from "react";
 import type { Report } from "@/types";
 import Link from "next/link";
-import { useRole } from "@/hooks/useRole";
 
 const CityMap = dynamic(() => import("@/components/map/CityMap"), {
   ssr: false,
@@ -26,7 +25,6 @@ const DEFAULT_LAT = 40.9833;
 const DEFAULT_LNG = 29.0333;
 
 export default function CitizenApp() {
-  const { role } = useRole();
   const [showForm, setShowForm] = useState(false);
   const [showSky, setShowSky] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
@@ -96,31 +94,25 @@ export default function CitizenApp() {
         )}
       </div>
 
-      {/* Bildir butonu - Sadece citizen rolü için */}
+      {/* Bildir butonu */}
       <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-center pb-safe-bottom pb-8 gap-2 pointer-events-none">
-        {role === "citizen" ? (
-          <div className="pointer-events-auto flex flex-col sm:flex-row gap-2">
-            <button
-              onClick={() => setShowForm(true)}
-              className="px-8 py-4 bg-amber-500 hover:bg-amber-400 active:scale-95 text-black font-bold rounded-2xl shadow-xl shadow-amber-500/30 transition text-base flex items-center gap-2"
-            >
-              <span className="text-xl">📋</span> Şikayet Bildir
-            </button>
-            <button
-              onClick={() => setShowSky(true)}
-              className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold rounded-2xl shadow-xl shadow-indigo-500/30 transition text-base flex items-center gap-2"
-            >
-              <span className="text-xl">🌌</span> Gökyüzünü Keşfet
-            </button>
-          </div>
-        ) : (
-          <div className="pointer-events-auto px-6 py-3 bg-gray-800/60 backdrop-blur border border-gray-700 rounded-2xl text-gray-300 text-sm text-center">
-            ℹ️ Rapor göndermek için vatandaş rolüne geçiniz
-          </div>
-        )}
+        <div className="pointer-events-auto flex flex-col sm:flex-row gap-2">
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-8 py-4 bg-amber-500 hover:bg-amber-400 active:scale-95 text-black font-bold rounded-2xl shadow-xl shadow-amber-500/30 transition text-base flex items-center gap-2"
+          >
+            <span className="text-xl">📋</span> Şikayet Bildir
+          </button>
+          <button
+            onClick={() => setShowSky(true)}
+            className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold rounded-2xl shadow-xl shadow-indigo-500/30 transition text-base flex items-center gap-2"
+          >
+            <span className="text-xl">🌌</span> Gökyüzünü Keşfet
+          </button>
+        </div>
       </div>
 
-      {showForm && role === "citizen" && (
+      {showForm && (
         <ReportForm
           lat={userLat}
           lng={userLng}
