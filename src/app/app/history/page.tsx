@@ -217,7 +217,11 @@ export default function HistoryPage() {
                 <button
                   key={report.id}
                   onClick={() => setSelectedReport(report)}
-                  className="w-full text-left bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-amber-500/30 rounded-2xl p-4 transition active:scale-[0.98] group"
+                  className={`w-full text-left border rounded-2xl p-4 transition active:scale-[0.98] group ${
+                    report.status === "resolved"
+                      ? "bg-green-950/30 border-green-800/40 hover:border-green-600/50"
+                      : "bg-gray-900 hover:bg-gray-800 border-gray-800 hover:border-amber-500/30"
+                  }`}
                 >
                   <div className="flex gap-3 items-start">
                     {/* Fotoğraf thumbnail veya ikon */}
@@ -236,7 +240,14 @@ export default function HistoryPage() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <p className={`font-semibold text-sm ${meta.color}`}>{meta.label}</p>
+                        <div className="flex items-center gap-2">
+                          <p className={`font-semibold text-sm ${meta.color}`}>{meta.label}</p>
+                          {report.status === "resolved" && (
+                            <span className="flex items-center gap-1 text-[10px] font-semibold text-green-400 bg-green-500/15 px-1.5 py-0.5 rounded-full">
+                              ✓ Çözüldü
+                            </span>
+                          )}
+                        </div>
                         <span className="text-xs text-gray-600 shrink-0">{timeAgo(report.created_at)}</span>
                       </div>
                       <p className="text-gray-300 text-sm mt-0.5 line-clamp-2 leading-snug">

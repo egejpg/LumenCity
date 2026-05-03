@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useRole } from "@/hooks/useRole";
 import { createClientSupabaseClient } from "@/lib/supabase/client";
 import type { ReportCategory } from "@/types";
 
@@ -40,24 +39,6 @@ interface ReportFormProps {
 type Step = "form" | "uploading" | "done" | "error";
 
 export default function ReportForm({ onClose, onSuccess, lat, lng }: ReportFormProps) {
-  const { role } = useRole();
-
-  if (role !== "citizen") {
-    return (
-      <div className="absolute inset-0 z-20 bg-black/75 flex items-center justify-center backdrop-blur-sm">
-        <div className="bg-gray-950 border border-gray-800 rounded-3xl p-8 max-w-sm text-center shadow-2xl">
-          <p className="text-gray-400 text-lg mb-4">⛔ Yetki Yetersiz</p>
-          <p className="text-gray-500 text-sm mb-6">
-            Bildirim yapabilmek için vatandaş rolüne geçmeniz gerekmektedir.
-          </p>
-          <button onClick={onClose} className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition">
-            Kapat
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const [step, setStep]               = useState<Step>("form");
   const [imageFile, setImageFile]     = useState<File | null>(null);
   const [previewUrl, setPreviewUrl]   = useState<string | null>(null);
@@ -139,7 +120,7 @@ export default function ReportForm({ onClose, onSuccess, lat, lng }: ReportFormP
     try {
       const res = await fetch("/api/reports", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-user-role": role },
+        headers: { "Content-Type": "application/json", "x-user-role": "citizen" },
         body: JSON.stringify({
           lat,
           lng,

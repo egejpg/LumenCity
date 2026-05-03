@@ -35,25 +35,25 @@ export default function ZoneDetailPanel({ zone, onClose }: ZoneDetailPanelProps)
   const savingPct = Math.round((zone.potential_saving_kwh / zone.current_kwh) * 100);
 
   return (
-    <div className="w-[400px] h-full flex flex-col bg-slate-800 border-l border-slate-700 overflow-y-auto">
+    <div className="w-full h-full flex flex-col bg-slate-800 border-l border-slate-700 overflow-y-auto">
 
       {/* ── Başlık ── */}
       <div className="px-5 py-4 border-b border-slate-700 shrink-0">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-base leading-none">{icon}</span>
-              <h2 className="text-sm font-semibold text-white truncate">{zone.name}</h2>
+            <div className="flex items-center gap-2.5 mb-2">
+              <span className="text-2xl leading-none">{icon}</span>
+              <h2 className="text-base font-bold text-white leading-tight">{zone.name}</h2>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-bold text-red-300 bg-red-900/50 border border-red-700/50 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-bold text-red-300 bg-red-900/50 border border-red-700/50 px-2.5 py-0.5 rounded-full">
                 KRİTİK
               </span>
-              <span className="text-[10px] text-slate-400">
-                Moda Mahallesi · {MOCK_ZONE_META.district} {/* MOCK */}
+              <span className="text-xs text-slate-400">
+                Moda Mahallesi · {MOCK_ZONE_META.district}
               </span>
-              <span className="text-[10px] text-slate-500">
-                {MOCK_ZONE_META.lastDetected} {/* MOCK */}
+              <span className="text-xs text-slate-500">
+                {MOCK_ZONE_META.lastDetected}
               </span>
             </div>
           </div>
@@ -80,7 +80,7 @@ export default function ZoneDetailPanel({ zone, onClose }: ZoneDetailPanelProps)
 
       {/* ── Senaryo Kartları ── */}
       <div className="px-5 py-4 border-b border-slate-700 shrink-0">
-        <p className="text-[10px] font-semibold tracking-widest text-slate-400 uppercase mb-4">
+        <p className="text-xs font-semibold tracking-widest text-slate-400 uppercase mb-4">
           Senaryo Karşılaştırması
         </p>
         <ScenarioCards zone={zone} />
@@ -92,13 +92,13 @@ export default function ZoneDetailPanel({ zone, onClose }: ZoneDetailPanelProps)
           <div className="w-5 h-5 rounded-md bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-[11px] text-amber-400">
             ✦
           </div>
-          <p className="text-[10px] font-semibold tracking-widest text-amber-400/80 uppercase">
+          <p className="text-xs font-semibold tracking-widest text-amber-400/80 uppercase">
             AI Analiz Notu
           </p>
         </div>
         <div className="bg-slate-700/50 border border-slate-600 rounded-xl px-4 py-3">
-          <p className="text-xs text-slate-300 leading-relaxed">
-            {MOCK_AI_NOTE} {/* MOCK */}
+          <p className="text-sm text-slate-300 leading-relaxed">
+            {MOCK_AI_NOTE}
           </p>
         </div>
       </div>
@@ -109,9 +109,9 @@ export default function ZoneDetailPanel({ zone, onClose }: ZoneDetailPanelProps)
 
 function QuickStat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2.5">
-      <p className={`text-sm font-bold leading-tight ${color}`}>{value}</p>
-      <p className="text-[10px] text-slate-400 mt-0.5">{label}</p>
+    <div className="bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-3">
+      <p className={`text-base font-bold leading-tight ${color}`}>{value}</p>
+      <p className="text-xs text-slate-400 mt-1">{label}</p>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClientSupabaseClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,19 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 type Mode = "citizen" | "staff";
 
 export default function LoginPage() {
-  const [mode, setMode] = useState<Mode>("citizen");
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next") ?? null;
+  const typeParam = searchParams.get("type");
+
+  const [mode, setMode] = useState<Mode>(typeParam === "staff" ? "staff" : "citizen");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -51,9 +63,9 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/admin");
+      router.push(nextPath ?? "/admin");
     } else {
-      router.push("/app");
+      router.push(nextPath ?? "/app");
     }
 
     router.refresh();

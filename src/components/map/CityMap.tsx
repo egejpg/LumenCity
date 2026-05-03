@@ -10,19 +10,32 @@ import { useAnomalies } from "@/hooks/useAnomalies";
 import ReportPin from "./ReportPin";
 import AnomalyMarker from "./AnomalyMarker";
 import HeatmapLayer from "./HeatmapLayer";
-import type { LayerConfig, Zone } from "@/types";
+import type { LayerConfig, Zone, Report } from "@/types";
 
-// Moda Mahallesi merkezi
 const PILOT_CENTER: [number, number] = [41.015, 29.0];
 const PILOT_ZOOM = 11;
+
+export type FlyToFn = (lat: number, lng: number, zoom?: number) => void;
 
 interface CityMapProps {
   mode: "citizen" | "admin";
   layers?: LayerConfig;
   onZoneClick?: (zone: Zone) => void;
-  onReportClick?: (report: import("@/types").Report) => void;
+  onReportClick?: (report: Report) => void;
   draftPin?: { lat: number; lng: number };
   refreshTrigger?: number;
+  flyToRef?: React.RefObject<FlyToFn | null>;
+}
+
+function MapController({ flyToRef }: { flyToRef?: React.RefObject<FlyToFn | null> }) {
+  const map = useMap();
+  useEffect(() => {
+    if (flyToRef) {
+      (flyToRef as React.RefObject<FlyToFn | null> & { current: FlyToFn | null }).current =
+        (lat, lng, zoom = 16) => map.flyTo([lat, lng], zoom, { duration: 1 });
+    }
+  }, [map, flyToRef]);
+  return null;
 }
 
 function MapUpdater({ center }: { center: [number, number] }) {
@@ -47,14 +60,7 @@ function LeafletIconFix() {
   return null;
 }
 
-// Sabit kullanıcı konum pini
-function UserPin({
-  lat,
-  lng,
-}: {
-  lat: number;
-  lng: number;
-}) {
+function UserPin({ lat, lng }: { lat: number; lng: number }) {
   const pinIcon = L.divIcon({
     html: `<div style="
       width:36px;height:36px;
@@ -71,14 +77,7 @@ function UserPin({
     iconAnchor: [18, 36],
     iconSize: [36, 36],
   });
-
-  return (
-    <Marker
-      position={[lat, lng]}
-      icon={pinIcon}
-      interactive={false}
-    />
-  );
+  return <Marker position={[lat, lng]} icon={pinIcon} interactive={false} />;
 }
 
 export default function CityMap({
@@ -88,14 +87,15 @@ export default function CityMap({
   onReportClick,
   draftPin,
   refreshTrigger,
+  flyToRef,
 }: CityMapProps) {
   const { reports } = useReports(refreshTrigger);
   const { anomalies } = useAnomalies();
 
-  const showHeatmap    = mode === "admin" ? (layers?.heatmap    ?? true)  : false;
-  const showReports    = layers?.reports   ?? true;
-  const showAnomalies  = mode === "admin" ? (layers?.anomalies  ?? true)  : false;
-  const showSatellite  = mode === "admin" ? (layers?.satellite  ?? false) : false;
+  const showHeatmap   = mode === "admin" ? (layers?.heatmap   ?? true)  : false;
+  const showReports   = layers?.reports  ?? true;
+  const showAnomalies = mode === "admin" ? (layers?.anomalies ?? true)  : false;
+  const showSatellite = mode === "admin" ? (layers?.satellite ?? false) : false;
 
   return (
     <MapContainer
@@ -110,6 +110,7 @@ export default function CityMap({
     >
       <ZoomControl position="bottomleft" />
       <LeafletIconFix />
+      {flyToRef && <MapController flyToRef={flyToRef} />}
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://carto.com/">CARTO</a>'
@@ -130,7 +131,7 @@ export default function CityMap({
       {showReports && (
         <MarkerClusterGroup
           chunkedLoading
-          iconCreateFunction={(cluster) => {
+          iconCreateFunction={(cluster: { getChildCount: () => number }) => {
             const count = cluster.getChildCount();
             return L.divIcon({
               html: `<div style="
@@ -170,10 +171,7 @@ export default function CityMap({
       {draftPin && <MapUpdater center={[draftPin.lat, draftPin.lng]} />}
 
       {mode === "citizen" && draftPin && (
-        <UserPin
-          lat={draftPin.lat}
-          lng={draftPin.lng}
-        />
+        <UserPin lat={draftPin.lat} lng={draftPin.lng} />
       )}
     </MapContainer>
   );

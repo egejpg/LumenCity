@@ -10,16 +10,39 @@ export async function GET() {
     try {
       const { createServerSupabaseClient } = await import("@/lib/supabase/server");
       const supabase = createServerSupabaseClient();
-      const { data, error } = await supabase
+
+      let data: any[] | null = null;
+      let hasStatus = false;
+
+      // Migration 005+006 uygulandıysa genişletilmiş sorgu
+      const full = await supabase
         .from("reports")
-        .select("id, lat, lng, category, description, image_url, created_at")
+        .select("id, lat, lng, category, description, image_url, created_at, status, user_email")
+        .neq("status", "deleted")
         .order("created_at", { ascending: false });
-      if (!error && data) {
-        // Runtime mock raporları (Supabase'e yazılamayanlar) ile birleştir
-        const supabaseIds = new Set(data.map((r: any) => r.id));
+
+      if (!full.error && full.data) {
+        data = full.data;
+        hasStatus = true;
+      } else {
+        // Migration henüz uygulanmamış — temel sorgu
+        const basic = await supabase
+          .from("reports")
+          .select("id, lat, lng, category, description, image_url, created_at")
+          .order("created_at", { ascending: false });
+        if (!basic.error && basic.data) data = basic.data;
+      }
+
+      if (data) {
+        const reports = data.map((r: any) => ({
+          ...r,
+          status: hasStatus ? (r.status ?? "open") : "open",
+          user_email: hasStatus ? (r.user_email ?? null) : null,
+        }));
         const { runtimeOnlyReports } = await import("@/lib/mock-data");
+        const supabaseIds = new Set(data.map((r: any) => r.id));
         const extras = runtimeOnlyReports().filter((r) => !supabaseIds.has(r.id));
-        return NextResponse.json([...extras, ...data]);
+        return NextResponse.json([...extras, ...reports]);
       }
     } catch {
       // fallback to mock
@@ -30,20 +53,15 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const role = req.headers.get("x-user-role") || "citizen";
-
-  if (role !== "citizen") {
-    return NextResponse.json(
-      { error: "Yalnızca vatandaşlar rapor gönderebilir" },
-      { status: 403 }
-    );
-  }
-
   const body = await req.json();
 
   if (hasSupabase()) {
     try {
-      const { createServerSupabaseClient } = await import("@/lib/supabase/server");
+      const { createSessionSupabaseClient, createServerSupabaseClient } = await import("@/lib/supabase/server");
+
+      const sessionClient = await createSessionSupabaseClient();
+      const { data: { user } } = await sessionClient.auth.getUser();
+
       const supabase = createServerSupabaseClient();
       const { data, error } = await supabase
         .from("reports")
@@ -53,9 +71,12 @@ export async function POST(req: NextRequest) {
           category: body.category,
           description: body.description,
           image_url: body.image_url ?? null,
+          user_id: user?.id ?? null,
+          user_email: user?.email ?? null,
         })
-        .select()
+        .select("id, lat, lng, category, description, image_url, created_at, status, user_email")
         .single();
+
       if (!error && data) return NextResponse.json(data, { status: 201 });
       console.error("[reports POST] Supabase hatası:", error?.message);
     } catch (e) {
@@ -63,7 +84,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Supabase yoksa veya başarısız olduysa mock'a kaydet
   const newReport = {
     id: `r-${Date.now()}`,
     lat: body.lat,
@@ -72,6 +92,8 @@ export async function POST(req: NextRequest) {
     description: body.description,
     image_url: body.image_url ?? null,
     created_at: new Date().toISOString(),
+    status: "open" as const,
+    user_email: null,
   };
   addRuntimeReport(newReport);
   return NextResponse.json(newReport, { status: 201 });

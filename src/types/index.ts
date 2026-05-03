@@ -12,8 +12,11 @@ export interface Report {
   category: ReportCategory;
   description: string;
   image_url: string | null;
-  star_data?: any; // Gökyüzü analiz verisi (Before/After için)
+  star_data?: any;
   created_at: string;
+  username?: string;
+  user_email?: string;
+  status?: "open" | "resolved" | "deleted";
 }
 
 export interface Anomaly {

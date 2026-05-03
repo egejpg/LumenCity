@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { createClientSupabaseClient } from "@/lib/supabase/client";
 
 const EarthGlobe = dynamic(() => import("@/components/EarthGlobe"), {
   ssr: false,
@@ -16,6 +17,16 @@ const EarthGlobe = dynamic(() => import("@/components/EarthGlobe"), {
 
 export default function LandingPage() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const supabase = createClientSupabaseClient();
+    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setLoggedIn(!!session?.user);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <main className="text-white overflow-x-hidden">
@@ -32,8 +43,26 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#0a0a1a]/80 backdrop-blur-sm border-b border-gray-800/50">
         <span className="text-xl font-bold text-amber-400">LumenCity</span>
         <div className="flex items-center gap-3">
-          <Link href="/app"   className="px-4 py-1.5 text-sm bg-amber-500 hover:bg-amber-400 text-gray-950 font-semibold rounded-lg transition">Bildirim Yap</Link>
-          <Link href="/admin" className="px-4 py-1.5 text-sm border border-amber-500/50 text-amber-400 hover:bg-amber-500/10 font-semibold rounded-lg transition">Belediye Paneli</Link>
+          {loggedIn === null ? null : loggedIn ? (
+            <button
+              onClick={async () => {
+                const supabase = createClientSupabaseClient();
+                await supabase.auth.signOut();
+              }}
+              title="Çıkış Yap"
+              className="flex items-center justify-center w-9 h-9 rounded-full border border-gray-700 text-gray-400 hover:border-red-500/60 hover:text-red-400 transition bg-gray-900/80 backdrop-blur"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <path d="M18.36 6.64A9 9 0 1 1 5.64 5.64" />
+                <line x1="12" y1="2" x2="12" y2="12" />
+              </svg>
+            </button>
+          ) : (
+            <>
+              <Link href="/login"             className="px-4 py-1.5 text-sm bg-amber-500 hover:bg-amber-400 text-gray-950 font-semibold rounded-lg transition">Kullanıcı Girişi</Link>
+              <Link href="/login?type=staff" className="px-4 py-1.5 text-sm border border-amber-500/50 text-amber-400 hover:bg-amber-500/10 font-semibold rounded-lg transition">Personel Girişi</Link>
+            </>
+          )}
         </div>
       </nav>
 
@@ -53,8 +82,8 @@ export default function LandingPage() {
             Vatandaş bildiriyor. Yapay zeka doğruluyor.<br />Belediye karar veriyor. Tasarruf görselleşiyor.
           </p>
           <div className="flex gap-4 mt-8 pointer-events-auto">
-            <Link href="/app"   className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-gray-950 font-semibold rounded-xl transition shadow-lg shadow-amber-500/20">Bildirim Yap →</Link>
-            <Link href="/admin" className="px-6 py-3 border border-amber-500/50 text-amber-400 hover:bg-amber-500/10 font-semibold rounded-xl transition backdrop-blur-sm">Belediye Paneli</Link>
+            <Link href={loggedIn ? "/app" : "/login"} className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-gray-950 font-semibold rounded-xl transition shadow-lg shadow-amber-500/20">Işık Kirliliği Bildir →</Link>
+            <Link href={loggedIn ? "/admin" : "/login?type=staff"} className="px-6 py-3 border border-amber-500/50 text-amber-400 hover:bg-amber-500/10 font-semibold rounded-xl transition backdrop-blur-sm">Belediye Paneli</Link>
           </div>
         </section>
 

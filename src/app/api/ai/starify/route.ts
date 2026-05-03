@@ -27,11 +27,11 @@ export async function POST(req: NextRequest) {
       input: {
         image_url: uploadedUrl,
         prompt:
-          "night sky with thousands of bright visible stars, milky way galaxy clearly visible, astrophotography, dark sky observatory quality, stars twinkling, deep blue and purple sky, no light pollution whatsoever, city skyline and buildings unchanged in foreground",
-        negative_prompt: "light pollution, orange sky glow, overcast, cloudy, blurry stars, cartoon, painting, no stars, few stars",
-        strength: 0.75,
-        num_inference_steps: 35,
-        guidance_scale: 7,
+          "Replace only the sky in this photo with a realistic unpolluted night sky. Show natural star visibility as seen from a dark rural area — hundreds of clearly visible stars with realistic brightness variation, a faint hint of the Milky Way band barely visible, deep dark blue-black sky. No over-the-top galaxy effects. The stars should look like what the human eye would actually see without light pollution. Match the ambient lighting and color temperature of the original foreground. Keep everything below the horizon completely untouched. Photorealistic, natural, subtle.",
+        negative_prompt: "light pollution, sky glow, orange haze, yellow sky, glowing horizon, artificial light, streetlight glow, overexposed sky, washed out sky, cloudy, overcast, hazy, foggy, blurry, few stars, no stars, cartoon, illustration, painting, drawing, CGI, unrealistic, changed buildings, altered foreground, different architecture",
+        strength: 0.82,
+        num_inference_steps: 40,
+        guidance_scale: 9,
         num_images: 1,
       },
     }) as any;

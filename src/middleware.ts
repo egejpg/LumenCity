@@ -2,9 +2,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createMiddlewareClient } from "@/lib/supabase/middleware";
 
 // Giriş gerektiren rotalar
-const AUTH_ROUTES = ["/feed", "/create"];
+const AUTH_ROUTES = ["/feed", "/create", "/app"];
 // Sadece staff erişebilir
-const STAFF_ROUTES = ["/dashboard"];
+const STAFF_ROUTES = ["/dashboard", "/admin"];
 
 export async function middleware(request: NextRequest) {
   const { supabase, response } = createMiddlewareClient(request);
@@ -20,6 +20,7 @@ export async function middleware(request: NextRequest) {
   if ((needsAuth || needsStaff) && !user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
+    if (needsStaff) loginUrl.searchParams.set("type", "staff");
     return NextResponse.redirect(loginUrl);
   }
 
