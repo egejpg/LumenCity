@@ -1,5 +1,7 @@
 # LumenCity
 
+Proje linki: https://lumen-city-z57f.vercel.app/
+
 **Vatandas bildiriyor. Yapay zeka dogruluyor. Belediye karar veriyor.**
 
 LumenCity, sehirlerdeki isik kirliligini ve enerji israfini tespit etmek, gorsellistirmek ve azaltmak icin gelistirilmis akilli bir kentsel aydinlatma platformudur. NASA Black Marble uydu verileri, Claude AI goruntu analizi ve vatandas katilimini birlestirerek belediyeler ile sakinler arasinda kopru kurar.
