@@ -127,7 +127,7 @@ Vatandas gokyuzu fotografini yukler
 
 ```bash
 # 1. Repoyu klonla
-git clone https://github.com/KULLANICI_ADI/lumencity.git
+git clone https://github.com/egejpg/lumencity.git
 cd lumencity
 
 # 2. Bagimliliklar yukle
@@ -222,7 +222,7 @@ Ardindan `npm run dev` sunucusunu yeniden baslat.
 git init
 git add .
 git commit -m "feat: initial LumenCity"
-git remote add origin https://github.com/KULLANICI_ADI/lumencity.git
+git remote add origin https://github.com/egejpg/lumencity.git
 git push -u origin main
 ```
 
