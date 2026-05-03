@@ -1,6 +1,7 @@
 # LumenCity
 
 Proje linki: https://lumen-city-z57f.vercel.app/
+Sunum linki: https://drive.google.com/drive/folders/17j07-2_2hx3Y9mFBvbzLMiObYLXjyA0Y?usp=sharing
 
 **Vatandas bildiriyor. Yapay zeka dogruluyor. Belediye karar veriyor.**
 
