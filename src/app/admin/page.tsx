@@ -27,9 +27,8 @@ const ZoneDetailPanel = dynamic(
 );
 
 const LAYER_CONFIG = [
-  { key: "heatmap"   as const, label: "NASA Heatmap",             dot: "bg-amber-400"  },
   { key: "reports"   as const, label: "Vatandaş Bildirimleri",    dot: "bg-blue-400"   },
-  { key: "anomalies" as const, label: "AI Anomalileri",           dot: "bg-red-400"    },
+  { key: "anomalies" as const, label: "Anomaliler",               dot: "bg-red-400"    },
   { key: "satellite" as const, label: "NASA Uydu (Black Marble)", dot: "bg-cyan-400"   },
 ];
 
@@ -38,7 +37,7 @@ type SidebarTab = "anomalies" | "reports";
 export default function AdminDashboard() {
   const [selectedZone, setSelectedZone]     = useState<Zone | null>(null);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [layers, setLayers]                 = useState({ heatmap: true, reports: true, anomalies: true, satellite: false });
+  const [layers, setLayers]                 = useState({ heatmap: false, reports: true, anomalies: true, satellite: false });
   const [sidebarTab, setSidebarTab]         = useState<SidebarTab>("anomalies");
   const [mapRefreshKey, setMapRefreshKey]   = useState(0);
   const [listRefreshKey, setListRefreshKey] = useState(0);
@@ -135,7 +134,7 @@ export default function AdminDashboard() {
               onClick={() => setSidebarTab("anomalies")}
               className={`flex-1 py-2 text-[11px] font-medium transition ${sidebarTab === "anomalies" ? "text-amber-400 border-b-2 border-amber-400" : "text-slate-500 hover:text-slate-300"}`}
             >
-              AI Anomalileri
+              Anomaliler
             </button>
             <button
               onClick={() => setSidebarTab("reports")}
