@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     image_url: body.image_url ?? null,
     created_at: new Date().toISOString(),
     status: "open" as const,
-    user_email: null,
+    user_email: undefined,
   };
   addRuntimeReport(newReport);
   return NextResponse.json(newReport, { status: 201 });
