@@ -6,6 +6,13 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { createClientSupabaseClient } from "@/lib/supabase/client";
 
+const HaloSimulation = dynamic(() => import("@/components/halo/HaloSimulation"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[460px] bg-gray-900 rounded-2xl animate-pulse" />
+  ),
+});
+
 const EarthGlobe = dynamic(() => import("@/components/EarthGlobe"), {
   ssr: false,
   loading: () => (
@@ -196,6 +203,23 @@ export default function LandingPage() {
               Uygulamayı Aç →
             </Link>
           </div>
+        </section>
+
+        {/* ── Halo Simülasyonu ── */}
+        <section className="px-6 py-24 max-w-4xl mx-auto pointer-events-auto select-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold tracking-[0.3em] text-emerald-400/70 uppercase mb-3">Adaptif Aydınlatma</p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-5">
+              Sadece İhtiyaç Duyulduğunda<br />
+              <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Tam Işık</span>
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto text-lg leading-relaxed">
+              Hareket sensörlü akıllı lambalar; yaya veya araç yaklaştığında <span className="text-emerald-300 font-medium">%100</span> parlaklığa çıkar,
+              boşta yalnızca <span className="text-emerald-300 font-medium">%15</span> güç kullanır.
+              Canlı simülasyonda deneyin.
+            </p>
+          </div>
+          <HaloSimulation />
         </section>
 
         {/* ── Feature Cards ── */}
