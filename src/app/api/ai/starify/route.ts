@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
 
     // Flux img2img ile gökyüzüne gerçekçi yıldız ekle
     const result = await fal.subscribe("fal-ai/flux/dev/image-to-image", {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       input: {
         image_url: uploadedUrl,
         prompt:
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
         num_inference_steps: 40,
         guidance_scale: 9,
         num_images: 1,
-      },
+      } as any,
     }) as any;
 
     const outputUrl = result?.data?.images?.[0]?.url ?? result?.images?.[0]?.url;

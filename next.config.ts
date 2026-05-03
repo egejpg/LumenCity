@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: false, // Leaflet haritasının mobilde çift render yüzünden çökmesini engeller
   outputFileTracingRoot: path.join(__dirname),
   webpack: (config) => {
-    config.resolve.fallback = { fs: false };
+    config.resolve.fallback = { fs: false, encoding: false };
     return config;
   },
   transpilePackages: ["globe.gl"],
